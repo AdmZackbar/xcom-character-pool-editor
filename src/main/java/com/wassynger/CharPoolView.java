@@ -8,7 +8,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -17,10 +16,13 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+
+import org.controlsfx.control.SegmentedButton;
 
 public class CharPoolView extends BorderPane
 {
@@ -30,7 +32,7 @@ public class CharPoolView extends BorderPane
    @FXML
    private GridPane viewChar;
    @FXML
-   private ScrollPane scrollPane;
+   private BorderPane viewAppDetail;
    @FXML
    private ListView<Character> listChar;
    @FXML
@@ -52,11 +54,31 @@ public class CharPoolView extends BorderPane
    @FXML
    private ComboBox<String> cBoxClass;
    @FXML
+   private ComboBox<Race> cBoxRace;
+   @FXML
+   private ComboBox<String> cBoxVoice;
+   @FXML
+   private ComboBox<Personality> cBoxAttitude;
+   @FXML
    private CheckBox chkSoldier;
    @FXML
    private CheckBox chkVip;
    @FXML
    private CheckBox chkDarkVip;
+   @FXML
+   private SegmentedButton segButtonSex;
+   @FXML
+   private SegmentedButton segButtonEdit;
+   @FXML
+   private ToggleButton buttonMale;
+   @FXML
+   private ToggleButton buttonFemale;
+   @FXML
+   private ToggleButton buttonHead;
+   @FXML
+   private ToggleButton buttonBody;
+   @FXML
+   private ToggleButton buttonWeapon;
 
    public CharPoolView()
    {
@@ -77,6 +99,13 @@ public class CharPoolView extends BorderPane
       listChar.getSelectionModel()
             .selectedItemProperty()
             .addListener((obs, old, newValue) -> onSelectedCharChanged(newValue));
+
+      cBoxRace.setCellFactory(list -> new FormattedListCell<>(StaticEnum::getLocalizedString));
+      cBoxRace.setButtonCell(new FormattedListCell<>(StaticEnum::getLocalizedString));
+      cBoxRace.getItems().addAll(Race.values());
+      cBoxAttitude.setCellFactory(list -> new FormattedListCell<>(StaticEnum::getLocalizedString));
+      cBoxAttitude.setButtonCell(new FormattedListCell<>(StaticEnum::getLocalizedString));
+      cBoxAttitude.getItems().addAll(Personality.values());
    }
 
    private String formatCharacter(Character c)
@@ -102,24 +131,47 @@ public class CharPoolView extends BorderPane
    {
       if (newValue == null)
       {
-         scrollPane.setContent(null);
+         viewAppDetail.setCenter(null);
          return;
       }
       fieldFName.setText(newValue.get(CharacterProperty.FIRST_NAME));
       fieldLName.setText(newValue.get(CharacterProperty.LAST_NAME));
-      fieldNName.setText(newValue.get(CharacterProperty.NICKNAME));
+      fieldNName.setText(getNickname(newValue));
       fieldBio.setText(newValue.get(CharacterProperty.BIOGRAPHY));
       labelCreationDate.setText(newValue.tryGet(CharacterProperty.CREATION_DATE).orElse("Unknown"));
-      cBoxCountry.getItems().setAll(newValue.get(CharacterProperty.COUNTRY));
-      cBoxCountry.getSelectionModel().selectFirst();
-      cBoxSType.getItems().setAll(newValue.get(CharacterProperty.TEMPLATE));
-      cBoxSType.getSelectionModel().selectFirst();
-      cBoxClass.getItems().setAll(newValue.get(CharacterProperty.CLASS));
-      cBoxClass.getSelectionModel().selectFirst();
+      setCBoxValue(cBoxCountry, newValue.get(CharacterProperty.COUNTRY));
+      setCBoxValue(cBoxSType, newValue.get(CharacterProperty.TEMPLATE));
+      setCBoxValue(cBoxClass, newValue.get(CharacterProperty.CLASS));
+      // TODO handle unknown cases for race/attitude/gender
+      newValue.getAppearanceEnum(AppearanceProperty.RACE, Race.class).ifPresent(cBoxRace.getSelectionModel()::select);
+      setCBoxValue(cBoxVoice, newValue.get(AppearanceProperty.VOICE_NAME));
+      newValue.getAppearanceEnum(AppearanceProperty.ATTITUDE, Personality.class)
+            .ifPresent(cBoxAttitude.getSelectionModel()::select);
       chkSoldier.setSelected(newValue.isSelected(CharacterProperty.IS_SOLDIER));
       chkVip.setSelected(newValue.isSelected(CharacterProperty.IS_VIP));
       chkDarkVip.setSelected(newValue.isSelected(CharacterProperty.IS_DARK_VIP));
-      scrollPane.setContent(createView(newValue.getProperties(CharacterProperty.APPEARANCE)));
+      newValue.getAppearanceEnum(AppearanceProperty.GENDER, Gender.class)
+            .map(g -> g == Gender.MALE ? buttonMale : buttonFemale)
+            .ifPresent(b -> b.setSelected(true));
+      ScrollPane scrollPane = new ScrollPane(createView(newValue.getProperties(CharacterProperty.APPEARANCE)));
+      scrollPane.setFitToWidth(true);
+      scrollPane.setFitToHeight(true);
+      viewAppDetail.setCenter(scrollPane);
+   }
+
+   private String getNickname(Character character)
+   {
+      // Remove surrounding ' quotes
+      return character.tryGet(CharacterProperty.NICKNAME)
+            .filter(str -> str.length() > 2)
+            .map(str -> str.substring(1, str.length() - 1))
+            .orElse("");
+   }
+
+   private void setCBoxValue(ComboBox<String> cBox, Object value)
+   {
+      cBox.getItems().setAll(Objects.toString(value));
+      cBox.getSelectionModel().selectFirst();
    }
 
    private GridPane createView(List<Property> properties)
@@ -127,7 +179,6 @@ public class CharPoolView extends BorderPane
       GridPane detailView = new GridPane();
       detailView.setHgap(4.0);
       detailView.setVgap(4.0);
-      detailView.setPadding(new Insets(4.0));
       ColumnConstraints col1 = new ColumnConstraints();
       col1.setMinWidth(USE_PREF_SIZE);
       detailView.getColumnConstraints().add(col1);
