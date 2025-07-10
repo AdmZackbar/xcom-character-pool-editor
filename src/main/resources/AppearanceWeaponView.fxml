@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<fx:root type="GridPane" styleClass="pane-group" stylesheets="@main.css" xmlns:fx="http://javafx.com/fxml/1"
+         xmlns="http://javafx.com/javafx/8.0.151">
+  <columnConstraints>
+    <ColumnConstraints halignment="RIGHT"/>
+    <ColumnConstraints hgrow="SOMETIMES" prefWidth="200.0"/>
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints/>
+    <RowConstraints/>
+  </rowConstraints>
+  <Label text="Tint:"/>
+  <Label text="Pattern:" GridPane.rowIndex="1"/>
+  <ComboBox fx:id="cBoxTint" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1"/>
+  <ComboBox fx:id="cBoxPattern" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+</fx:root>

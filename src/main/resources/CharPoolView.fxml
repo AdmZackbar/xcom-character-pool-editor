@@ -16,6 +16,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import org.controlsfx.control.SegmentedButton?>
 
+<?import javafx.scene.control.ScrollPane?>
 <fx:root type="BorderPane" prefWidth="800.0" prefHeight="600.0" stylesheets="@main.css"
          xmlns="http://javafx.com/javafx/8.0.151" xmlns:fx="http://javafx.com/fxml/1">
   <left>
@@ -117,7 +118,7 @@
       </GridPane>
       <BorderPane GridPane.columnSpan="2" GridPane.rowIndex="2">
         <left>
-          <GridPane prefWidth="220.0" styleClass="pane-group" BorderPane.alignment="CENTER">
+          <GridPane prefWidth="260.0" styleClass="pane-group" BorderPane.alignment="CENTER">
             <columnConstraints>
               <ColumnConstraints halignment="RIGHT" minWidth="-Infinity"/>
               <ColumnConstraints hgrow="SOMETIMES"/>
@@ -148,7 +149,7 @@
           </GridPane>
         </left>
         <center>
-          <BorderPane fx:id="viewAppDetail">
+          <BorderPane>
             <top>
               <SegmentedButton fx:id="segButtonEdit" BorderPane.alignment="CENTER_LEFT">
                 <buttons>
@@ -164,6 +165,9 @@
             <BorderPane.margin>
               <Insets left="8.0"/>
             </BorderPane.margin>
+            <center>
+              <ScrollPane fx:id="viewAppDetail" fitToWidth="true" fitToHeight="true"/>
+            </center>
           </BorderPane>
         </center>
         <GridPane.margin>

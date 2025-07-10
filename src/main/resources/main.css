@@ -38,3 +38,8 @@
     -fx-font-weight: normal;
     -fx-font-style: italic;
 }
+
+#viewAppDetail,
+#viewAppDetail .viewport {
+    -fx-background-color: transparent;
+}

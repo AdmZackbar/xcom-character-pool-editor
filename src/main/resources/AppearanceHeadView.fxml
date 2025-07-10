@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<fx:root type="GridPane" styleClass="pane-group" stylesheets="@main.css" xmlns="http://javafx.com/javafx/8.0.151"
+         xmlns:fx="http://javafx.com/fxml/1">
+  <columnConstraints>
+    <ColumnConstraints halignment="RIGHT"/>
+    <ColumnConstraints hgrow="SOMETIMES" prefWidth="200.0"/>
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+  </rowConstraints>
+  <Label text="Helmet:"/>
+  <Label text="Head:" GridPane.rowIndex="1"/>
+  <Label text="Skin Color:" GridPane.rowIndex="2"/>
+  <Label text="Eye Color:" GridPane.rowIndex="3"/>
+  <Label text="Scars:" GridPane.rowIndex="4"/>
+  <Label text="Face Paint:" GridPane.rowIndex="5"/>
+  <Label text="Hair:" GridPane.rowIndex="6"/>
+  <Label text="Facial Hair:" GridPane.rowIndex="7"/>
+  <Label text="Hair Color:" GridPane.rowIndex="8"/>
+  <Label text="Upper Prop:" GridPane.rowIndex="9"/>
+  <Label text="Lower Prop:" GridPane.rowIndex="10"/>
+  <ComboBox fx:id="cBoxHelmet" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1"/>
+  <ComboBox fx:id="cBoxHead" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+  <ComboBox fx:id="cBoxSkinColor" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+  <ComboBox fx:id="cBoxEyeColor" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+  <ComboBox fx:id="cBoxScar" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+  <ComboBox fx:id="cBoxPaint" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+  <ComboBox fx:id="cBoxHair" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+  <ComboBox fx:id="cBoxFaceHair" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+  <ComboBox fx:id="cBoxHairColor" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="8"/>
+  <ComboBox fx:id="cBoxPropUpper" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
+  <ComboBox fx:id="cBoxPropLower" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="10"/>
+</fx:root>

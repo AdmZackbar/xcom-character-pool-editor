@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+
+<fx:root type="GridPane" styleClass="pane-group" stylesheets="@main.css" xmlns="http://javafx.com/javafx/8.0.151"
+         xmlns:fx="http://javafx.com/fxml/1">
+  <columnConstraints>
+    <ColumnConstraints halignment="RIGHT"/>
+    <ColumnConstraints hgrow="SOMETIMES" prefWidth="200.0"/>
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+    <RowConstraints/>
+  </rowConstraints>
+  <Label text="Torso:"/>
+  <Label text="Torso Deco:" GridPane.rowIndex="1"/>
+  <Label text="Torso Underlay:" GridPane.rowIndex="2"/>
+  <Label text="Arms:" GridPane.rowIndex="3"/>
+  <Label text="Arms Underlay:" GridPane.rowIndex="4"/>
+  <Label text="Left Arm:" GridPane.rowIndex="5"/>
+  <Label text="Left Forearm:" GridPane.rowIndex="6"/>
+  <Label text="Left Arm Deco:" GridPane.rowIndex="7"/>
+  <Label text="Right Arm:" GridPane.rowIndex="8"/>
+  <Label text="Right Forearm:" GridPane.rowIndex="9"/>
+  <Label text="Right Arm Deco:" GridPane.rowIndex="10"/>
+  <Label text="Legs:" GridPane.rowIndex="11"/>
+  <Label text="Legs Underlay:" GridPane.rowIndex="12"/>
+  <Label text="Thighs:" GridPane.rowIndex="13"/>
+  <Label text="Shins:" GridPane.rowIndex="14"/>
+  <ComboBox fx:id="cBoxTorso" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1"/>
+  <ComboBox fx:id="cBoxTorsoDeco" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+  <ComboBox fx:id="cBoxTorsoUnder" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+  <ComboBox fx:id="cBoxArms" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+  <ComboBox fx:id="cBoxArmsUnder" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+  <ComboBox fx:id="cBoxArmLeft" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+  <ComboBox fx:id="cBoxForearmLeft" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+  <ComboBox fx:id="cBoxArmLeftDeco" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+  <ComboBox fx:id="cBoxArmRight" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="8"/>
+  <ComboBox fx:id="cBoxForearmRight" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="9"/>
+  <ComboBox fx:id="cBoxArmRightDeco" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="10"/>
+  <ComboBox fx:id="cBoxLegs" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="11"/>
+  <ComboBox fx:id="cBoxLegsUnder" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="12"/>
+  <ComboBox fx:id="cBoxThighs" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="13"/>
+  <ComboBox fx:id="cBoxShins" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="14"/>
+</fx:root>
