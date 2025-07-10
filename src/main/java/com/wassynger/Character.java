@@ -35,7 +35,7 @@ public class Character
 
    public Object get(AppearanceProperty property)
    {
-      return appearanceMap.get(property).getData();
+      return appearanceMap.containsKey(property) ? appearanceMap.get(property).getData() : null;
    }
 
    public Optional<String> tryGet(CharacterProperty property)
