@@ -1,0 +1,37 @@
+.pane-group {
+    -fx-border-color: -fx-outer-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-padding: 8;
+}
+.pane-group .label,
+.pane-group .check-box {
+    -fx-font-weight: bold;
+}
+
+.h1 {
+    -fx-font-size: 2.5em;
+    -fx-font-weight: bold;
+}
+.h2 {
+    -fx-font-size: 2.0em;
+    -fx-font-weight: bold;
+}
+.h3 {
+    -fx-font-size: 1.5em;
+    -fx-font-weight: bold;
+}
+.h4 {
+    -fx-font-size: 1.25em;
+    -fx-font-weight: bold;
+}
+
+
+#listChar .cell {
+    -fx-font-weight: bold;
+}
+
+#viewDate > .label {
+    -fx-font-weight: normal;
+    -fx-font-style: italic;
+}

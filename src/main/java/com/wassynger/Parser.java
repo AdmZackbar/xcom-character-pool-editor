@@ -35,7 +35,7 @@ class Parser
       }
       properties.add(property);
       assert parser.startPos.isEmpty();
-      return new CharacterPool(properties.stream()
+      return new CharacterPool(path.getFileName().toString(), properties.stream()
             .filter(Objects::nonNull)
             .filter(p -> "CharacterPool".equals(p.getName()))
             .map(p -> ((List<?>) p.getData()).stream().map(Property.class::cast).collect(Collectors.toList()))

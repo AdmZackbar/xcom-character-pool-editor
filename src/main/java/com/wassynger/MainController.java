@@ -40,12 +40,12 @@ public class MainController
    {
       try
       {
-         view.setCharacterPool(Parser.load(file.toPath()));
+         view.getCharPoolView().setCharPool(Parser.load(file.toPath()));
       }
       catch (IOException e)
       {
          FxUtilities.showError("File Load Error", "Failed to load character pool", e);
-         view.setCharacterPool(null);
+         view.getCharPoolView().setCharPool(null);
       }
    }
 

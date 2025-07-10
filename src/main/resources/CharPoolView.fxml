@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+
+<fx:root type="BorderPane" prefWidth="800.0" prefHeight="600.0" stylesheets="main.css"
+         xmlns="http://javafx.com/javafx/8.0.151" xmlns:fx="http://javafx.com/fxml/1">
+  <left>
+    <BorderPane BorderPane.alignment="CENTER">
+      <center>
+        <ListView fx:id="listChar" prefWidth="220.0"/>
+      </center>
+      <top>
+        <Label fx:id="labelPoolName" styleClass="h4" text="Character Pool" BorderPane.alignment="CENTER">
+          <BorderPane.margin>
+            <Insets bottom="4.0"/>
+          </BorderPane.margin>
+        </Label>
+      </top>
+    </BorderPane>
+  </left>
+  <center>
+    <GridPane fx:id="viewChar" hgap="8.0" vgap="8.0" BorderPane.alignment="CENTER">
+      <columnConstraints>
+        <ColumnConstraints prefWidth="260.0"/>
+        <ColumnConstraints hgrow="SOMETIMES"/>
+      </columnConstraints>
+      <rowConstraints>
+        <RowConstraints/>
+        <RowConstraints/>
+        <RowConstraints vgrow="SOMETIMES"/>
+      </rowConstraints>
+      <BorderPane.margin>
+        <Insets topRightBottomLeft="8.0"/>
+      </BorderPane.margin>
+      <GridPane hgap="4.0" maxHeight="-Infinity" styleClass="pane-group" vgap="4.0">
+        <columnConstraints>
+          <ColumnConstraints halignment="RIGHT" minWidth="-Infinity"/>
+          <ColumnConstraints hgrow="SOMETIMES"/>
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints/>
+          <RowConstraints/>
+          <RowConstraints/>
+          <RowConstraints/>
+        </rowConstraints>
+        <Label text="First Name:"/>
+        <Label text="Last Name:" GridPane.rowIndex="1"/>
+        <Label text="Nickname:" GridPane.rowIndex="2"/>
+        <Label text="Country:" GridPane.rowIndex="3"/>
+        <TextField fx:id="fieldFName" promptText="None" GridPane.columnIndex="1"/>
+        <TextField fx:id="fieldLName" promptText="None" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+        <TextField fx:id="fieldNName" promptText="None" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+        <ComboBox fx:id="cBoxCountry" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+      </GridPane>
+      <GridPane hgap="4.0" maxHeight="-Infinity" styleClass="pane-group" vgap="4.0" GridPane.rowIndex="1">
+        <columnConstraints>
+          <ColumnConstraints halignment="RIGHT"/>
+          <ColumnConstraints hgrow="SOMETIMES"/>
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints/>
+          <RowConstraints/>
+          <RowConstraints/>
+        </rowConstraints>
+        <Label text="Faction:"/>
+        <Label text="Class:" GridPane.rowIndex="1"/>
+        <ComboBox fx:id="cBoxSType" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1"/>
+        <ComboBox fx:id="cBoxClass" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+        <HBox maxWidth="-Infinity" spacing="8.0" GridPane.columnSpan="2" GridPane.halignment="CENTER"
+              GridPane.rowIndex="2">
+          <GridPane.margin>
+            <Insets top="4.0"/>
+          </GridPane.margin>
+          <CheckBox fx:id="chkSoldier" mnemonicParsing="false" text="Soldier"/>
+          <CheckBox fx:id="chkVip" mnemonicParsing="false" text="VIP"/>
+          <CheckBox fx:id="chkDarkVip" mnemonicParsing="false" text="Dark VIP"/>
+        </HBox>
+      </GridPane>
+      <GridPane styleClass="pane-group" vgap="4.0" GridPane.columnIndex="1" GridPane.rowSpan="2">
+        <columnConstraints>
+          <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+        </columnConstraints>
+        <rowConstraints>
+          <RowConstraints/>
+          <RowConstraints vgrow="SOMETIMES"/>
+        </rowConstraints>
+        <StackPane>
+          <Label text="Biography:" StackPane.alignment="CENTER_LEFT"/>
+          <GridPane fx:id="viewDate" hgap="4.0" maxWidth="-Infinity" StackPane.alignment="CENTER_RIGHT">
+            <columnConstraints>
+              <ColumnConstraints/>
+              <ColumnConstraints hgrow="SOMETIMES"/>
+            </columnConstraints>
+            <rowConstraints>
+              <RowConstraints/>
+            </rowConstraints>
+            <Label text="Created On:"/>
+            <Label fx:id="labelCreationDate" text="Date" GridPane.columnIndex="1"/>
+          </GridPane>
+        </StackPane>
+        <TextArea fx:id="fieldBio" prefHeight="100.0" promptText="No Record Found" wrapText="true"
+                  GridPane.rowIndex="1"/>
+      </GridPane>
+      <ScrollPane fx:id="scrollPane" GridPane.columnSpan="2" GridPane.rowIndex="2"/>
+    </GridPane>
+  </center>
+</fx:root>

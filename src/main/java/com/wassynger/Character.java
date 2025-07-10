@@ -1,10 +1,10 @@
 package com.wassynger;
 
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class Character
 {
@@ -34,9 +34,16 @@ public class Character
       propertyMap.put(property, new Property(property.getRaw(), Property.Type.STRING, value));
    }
 
-   List<Property> getProperties()
+   public boolean isSelected(CharacterProperty property)
    {
-      return new ArrayList<>(propertyMap.values());
+      return (Boolean) propertyMap.get(property).getData();
+   }
+
+   List<Property> getProperties(CharacterProperty property)
+   {
+      return ((List<?>) propertyMap.get(property).getData()).stream()
+            .map(Property.class::cast)
+            .collect(Collectors.toList());
    }
 
    @Override

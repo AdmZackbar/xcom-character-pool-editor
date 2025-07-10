@@ -1,15 +1,21 @@
 package com.wassynger;
 
 import java.util.List;
-import java.util.Objects;
 
 public class CharacterPool
 {
+   private final String name;
    private final List<Character> characters;
 
-   public CharacterPool(List<Character> characters)
+   public CharacterPool(String name, List<Character> characters)
    {
-      this.characters = Objects.requireNonNull(characters);
+      this.name = name;
+      this.characters = characters;
+   }
+
+   public String getName()
+   {
+      return name;
    }
 
    public List<Character> getCharacters()
