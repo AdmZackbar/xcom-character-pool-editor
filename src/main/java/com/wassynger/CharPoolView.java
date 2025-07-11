@@ -54,7 +54,7 @@ public class CharPoolView extends BorderPane
    @FXML
    private ComboBox<StringEntry> cBoxSType;
    @FXML
-   private ComboBox<String> cBoxClass;
+   private ComboBox<StringEntry> cBoxClass;
    @FXML
    private ComboBox<Race> cBoxRace;
    @FXML
@@ -112,10 +112,9 @@ public class CharPoolView extends BorderPane
             .selectedItemProperty()
             .addListener((obs, old, newValue) -> onSelectedCharChanged(newValue));
 
-      cBoxCountry.setCellFactory(list -> new FormattedListCell<>(StringEntry::getLocalized));
-      cBoxCountry.setButtonCell(new FormattedListCell<>(StringEntry::getLocalized));
-      cBoxSType.setCellFactory(list -> new FormattedListCell<>(StringEntry::getLocalized));
-      cBoxSType.setButtonCell(new FormattedListCell<>(StringEntry::getLocalized));
+      initStringEntryCBox(cBoxCountry);
+      initStringEntryCBox(cBoxSType);
+      initStringEntryCBox(cBoxClass);
       cBoxRace.setCellFactory(list -> new FormattedListCell<>(StaticEnum::getLocalizedString));
       cBoxRace.setButtonCell(new FormattedListCell<>(StaticEnum::getLocalizedString));
       cBoxRace.getItems().addAll(Race.values());
@@ -125,6 +124,12 @@ public class CharPoolView extends BorderPane
 
       // Load info
       refresh();
+   }
+
+   private void initStringEntryCBox(ComboBox<StringEntry> cBox)
+   {
+      cBox.setCellFactory(list -> new FormattedListCell<>(StringEntry::getLocalized));
+      cBox.setButtonCell(new FormattedListCell<>(StringEntry::getLocalized));
    }
 
    private void onSelectedAppearanceToggleChanged(Toggle old, Toggle newValue)
@@ -190,7 +195,7 @@ public class CharPoolView extends BorderPane
             StringTemplate.COUNTRY.getOrAdd(newValue.get(CharacterField.COUNTRY).getDisplayValue()));
       setCBoxValue(cBoxSType,
             StringTemplate.CHARACTER.getOrAdd(newValue.get(CharacterField.TEMPLATE).getDisplayValue()));
-      setCBoxValue(cBoxClass, newValue.get(CharacterField.CLASS));
+      setCBoxValue(cBoxClass, StringTemplate.CLASS.getOrAdd(newValue.get(CharacterField.CLASS).getDisplayValue()));
       // TODO handle unknown cases for race/attitude/gender
       newValue.getAppearanceEnum(AppearanceField.RACE, Race.class).ifPresent(cBoxRace.getSelectionModel()::select);
       setCBoxValue(cBoxVoice, newValue.get(AppearanceField.VOICE_NAME));
@@ -283,6 +288,7 @@ public class CharPoolView extends BorderPane
    {
       refresh(cBoxCountry, StringTemplate.COUNTRY);
       refresh(cBoxSType, StringTemplate.CHARACTER);
+      refresh(cBoxClass, StringTemplate.CLASS);
       // Need to refresh selection now that we have reloaded values
       onSelectedCharChanged(listChar.getSelectionModel().getSelectedItem());
    }

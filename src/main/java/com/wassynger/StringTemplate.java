@@ -12,6 +12,7 @@ import org.apache.commons.configuration2.INIConfiguration;
 public enum StringTemplate
 {
    CHARACTER("X2CharacterTemplate", "strCharacterName"),
+   CLASS("X2SoldierClassTemplate", "DisplayName"),
    COUNTRY("X2CountryTemplate", "DisplayName");
 
    private final Pattern sectionPattern;
