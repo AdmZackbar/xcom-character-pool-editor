@@ -1,7 +1,5 @@
 package com.wassynger;
 
-import java.util.Objects;
-
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -146,8 +144,11 @@ public class CharPoolView extends BorderPane
 
    private String formatCharacter(Character c)
    {
-      return String.format("%s %s %s", c.get(CharacterField.FIRST_NAME), c.get(CharacterField.NICKNAME),
-            c.get(CharacterField.LAST_NAME));
+      String fName = c.tryGet(CharacterField.FIRST_NAME).orElse("");
+      String lName = c.tryGet(CharacterField.LAST_NAME).orElse("");
+      return c.tryGet(CharacterField.NICKNAME)
+            .map(nName -> String.format("%s %s %s", fName, nName, lName))
+            .orElse(String.format("%s %s", fName, lName));
    }
 
    private void onCharPoolChanged(CharacterPool newValue)
@@ -169,10 +170,10 @@ public class CharPoolView extends BorderPane
       {
          return;
       }
-      fieldFName.setText((String) newValue.get(CharacterField.FIRST_NAME));
-      fieldLName.setText((String) newValue.get(CharacterField.LAST_NAME));
+      fieldFName.setText(newValue.tryGet(CharacterField.FIRST_NAME).orElse(""));
+      fieldLName.setText(newValue.tryGet(CharacterField.LAST_NAME).orElse(""));
       fieldNName.setText(getNickname(newValue));
-      fieldBio.setText((String) newValue.get(CharacterField.BIOGRAPHY));
+      fieldBio.setText(newValue.tryGet(CharacterField.BIOGRAPHY).orElse(""));
       labelCreationDate.setText(newValue.tryGet(CharacterField.CREATION_DATE).orElse("Unknown"));
       setCBoxValue(cBoxCountry, newValue.get(CharacterField.COUNTRY));
       setCBoxValue(cBoxSType, newValue.get(CharacterField.TEMPLATE));
@@ -230,15 +231,30 @@ public class CharPoolView extends BorderPane
             .orElse("");
    }
 
-   private void setCBoxValue(ComboBox<String> cBox, Object value)
+   private void setCBoxValue(ComboBox<String> cBox, PropertyValue value)
    {
-      cBox.getItems().setAll(Objects.toString(value));
+      if (value == null)
+      {
+         cBox.getItems().clear();
+         return;
+      }
+      cBox.getItems().setAll(value.getDisplayValue());
       cBox.getSelectionModel().selectFirst();
+   }
+
+   public CharacterPool getCharPool()
+   {
+      return charPool.get();
    }
 
    public void setCharPool(CharacterPool charPool)
    {
       this.charPool.set(charPool);
+   }
+
+   public ObjectProperty<CharacterPool> charPoolProperty()
+   {
+      return charPool;
    }
 
    static class HeadView extends GridPane

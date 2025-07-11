@@ -9,10 +9,9 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
-class Parser
+final class CharPoolReader
 {
    /**
     * Reads in a character pool file and returns the set of characters within.
@@ -24,32 +23,44 @@ class Parser
     */
    public static CharacterPool load(Path path) throws IOException
    {
-      Parser parser = new Parser(ByteBuffer.wrap(Files.readAllBytes(path)).order(ByteOrder.LITTLE_ENDIAN));
-      parser.readHeader();
-      Property property = parser.next();
+      CharPoolReader charPoolReader = new CharPoolReader(
+            ByteBuffer.wrap(Files.readAllBytes(path)).order(ByteOrder.LITTLE_ENDIAN));
+      charPoolReader.readHeader();
+      Property property = charPoolReader.next();
       List<Property> properties = new ArrayList<>();
-      while (parser.bb.hasRemaining())
+      while (charPoolReader.bb.hasRemaining())
       {
          properties.add(property);
-         property = parser.next();
+         property = charPoolReader.next();
       }
       properties.add(property);
-      assert parser.startPos.isEmpty();
-      return new CharacterPool(path.getFileName().toString(), properties.stream()
-            .filter(Objects::nonNull)
+      assert charPoolReader.startPos.isEmpty();
+      ArrayPropertyValue charPoolArrayProperty = properties.stream()
+            .filter(p -> p.getType() == PropertyType.ARRAY)
             .filter(p -> "CharacterPool".equals(p.getName()))
-            .map(p -> ((List<?>) p.getData()).stream().map(Property.class::cast).collect(Collectors.toList()))
-            .flatMap(List::stream)
-            .map(p -> new Character(
-                  ((List<?>) p.getData()).stream().map(Property.class::cast).collect(Collectors.toList())))
-            .collect(Collectors.toList()));
+            .map(p -> ((ArrayPropertyValue) p.getValue()))
+            .findFirst()
+            .orElse(null);
+      if (charPoolArrayProperty == null)
+      {
+         return null;
+      }
+      String fileName = charPoolArrayProperty.getHeader("PoolFileName")
+            .map(p -> p.getValue().getDisplayValue())
+            .orElse(path.getFileName().toString());
+      List<Character> characters = charPoolArrayProperty.getEntries()
+            .stream()
+            .map(ArrayPropertyValue.Entry::getProperties)
+            .map(Character::new)
+            .collect(Collectors.toList());
+      return new CharacterPool(path.getFileName().toString(), fileName, characters);
    }
 
    private final ByteBuffer bb;
    // Contains the start positions of all tracked blobs
    private final Deque<Integer> startPos;
 
-   private Parser(ByteBuffer bb)
+   private CharPoolReader(ByteBuffer bb)
    {
       this.bb = bb;
       this.startPos = new ArrayDeque<>();
@@ -110,7 +121,7 @@ class Parser
       assertIntValue(0);
       readPadding();
       boolean value = getBool();
-      return new Property(PropertyType.BOOL, name, value);
+      return new Property(PropertyType.BOOL, name, new BoolPropertyValue(value));
    }
 
    private Property readInt(String name)
@@ -119,7 +130,7 @@ class Parser
       assertIntValue(Integer.BYTES);
       readPadding();
       int value = getInt();
-      return new Property(PropertyType.INT, name, value);
+      return new Property(PropertyType.INT, name, new IntPropertyValue(value));
    }
 
    private Property readString(String name)
@@ -128,9 +139,9 @@ class Parser
       int size = getInt();
       markStart();
       readPadding();
-      String value = getAscii();
+      String str = getAscii();
       assertSize(size + Integer.BYTES);
-      return new Property(PropertyType.STRING, name, value);
+      return new Property(PropertyType.STRING, name, new StringPropertyValue(str));
    }
 
    private Property readName(String name)
@@ -139,12 +150,11 @@ class Parser
       int size = getInt();
       markStart();
       readPadding();
-      String value = getAscii();
-      Property property = new Property(PropertyType.NAME, name, value);
+      String str = getAscii();
       // Don't know what this value is, but it's not always 0
-      getInt();
+      int num = getInt();
       assertSize(size + Integer.BYTES);
-      return property;
+      return new Property(PropertyType.NAME, name, new NamePropertyValue(str, num));
    }
 
    private Property readStruct(String name)
@@ -153,19 +163,19 @@ class Parser
       int size = getInt();
       readPadding();
       // Struct class name
-      getAscii();
+      String structType = getAscii();
       readPadding();
       // Size of struct starts after the class name and padding
       markStart();
-      List<Property> properties = new ArrayList<>();
+      List<Property> entries = new ArrayList<>();
       Property property = next();
       while (property != null)
       {
-         properties.add(property);
+         entries.add(property);
          property = next();
       }
       assertSize(size);
-      return new Property(PropertyType.STRUCT, name, properties);
+      return new Property(PropertyType.STRUCT, name, new StructPropertyValue(structType, entries));
    }
 
    private Property readArray(String name)
@@ -175,11 +185,11 @@ class Parser
       readPadding();
       int numElements = getInt();
       Property property;
+      List<Property> headers = new ArrayList<>();
       // Don't know why this is, but the character pool array also contains some
       // information before the array of characters. For now keep this hardcoded
       if ("CharacterPool".equals(name))
       {
-         List<Property> headers = new ArrayList<>();
          property = next();
          while (property != null)
          {
@@ -189,7 +199,7 @@ class Parser
          // number of elements is repeated after the initial section
          assertIntValue(numElements);
       }
-      List<Property> children = new ArrayList<>();
+      List<ArrayPropertyValue.Entry> entries = new ArrayList<>();
       for (int i = 0; i < numElements; i++)
       {
          property = next();
@@ -199,10 +209,9 @@ class Parser
             properties.add(property);
             property = next();
          }
-         // Wrap the properties in a struct property
-         children.add(new Property(PropertyType.STRUCT, String.format("Child %d", i), properties));
+         entries.add(new ArrayPropertyValue.Entry(properties));
       }
-      return new Property(PropertyType.ARRAY, name, children);
+      return new Property(PropertyType.ARRAY, name, new ArrayPropertyValue(headers, entries));
    }
 
    /* ******* *

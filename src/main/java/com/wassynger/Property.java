@@ -1,18 +1,32 @@
 package com.wassynger;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
-final class Property
+public final class Property
 {
+   // size of 'None' string + 'None\0' + padding
+   static final int NONE_NUM_BYTES = computeStringNumBytes("None") + Integer.BYTES;
+
+   static int computeStringNumBytes(String str)
+   {
+      if (str == null)
+      {
+         return 0;
+      }
+      // size of string (int) + string length + null terminator
+      return Integer.BYTES + (str.getBytes(StandardCharsets.US_ASCII)).length + Byte.BYTES;
+   }
+
    private final PropertyType type;
    private final String name;
-   private final Object data;
+   private final PropertyValue value;
 
-   public Property(PropertyType type, String name, Object data)
+   public Property(PropertyType type, String name, PropertyValue value)
    {
-      this.type = type;
-      this.name = name;
-      this.data = data;
+      this.type = Objects.requireNonNull(type);
+      this.name = Objects.requireNonNull(name);
+      this.value = Objects.requireNonNull(value);
    }
 
    public PropertyType getType()
@@ -25,15 +39,22 @@ final class Property
       return name;
    }
 
-   public Object getData()
+   public PropertyValue getValue()
    {
-      return data;
+      return value;
+   }
+
+   public int computeLength()
+   {
+      // name length + name + padding + type name length + type name + padding + value
+      return computeStringNumBytes(name) + Integer.BYTES + computeStringNumBytes(type.getName()) + Integer.BYTES +
+             value.length();
    }
 
    @Override
    public String toString()
    {
-      return "Property{" + "type=" + type + ", name='" + name + '\'' + ", data=" + data + '}';
+      return "Property{" + "type=" + type + ", name='" + name + '\'' + ", value=" + value + '}';
    }
 
    @Override
@@ -44,12 +65,12 @@ final class Property
          return false;
       }
       Property property = (Property) o;
-      return type == property.type && Objects.equals(name, property.name) && Objects.equals(data, property.data);
+      return type == property.type && Objects.equals(name, property.name) && Objects.equals(value, property.value);
    }
 
    @Override
    public int hashCode()
    {
-      return Objects.hash(type, name, data);
+      return Objects.hash(type, name, value);
    }
 }

@@ -1,12 +1,10 @@
 package com.wassynger;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class Character
 {
@@ -23,52 +21,51 @@ public class Character
       }
       if (propertyMap.containsKey(CharacterField.APPEARANCE))
       {
-         for (Property property : getProperties(CharacterField.APPEARANCE))
+         StructPropertyValue appearance = (StructPropertyValue) propertyMap.get(CharacterField.APPEARANCE).getValue();
+         for (Property property : appearance.getEntries())
          {
             AppearanceField.get(property.getName()).ifPresent(p -> appearanceMap.put(p, property));
          }
       }
    }
 
-   public Object get(CharacterField field)
+   public PropertyValue get(CharacterField field)
    {
-      return propertyMap.containsKey(field) ? propertyMap.get(field).getData() : null;
+      return propertyMap.containsKey(field) ? propertyMap.get(field).getValue() : null;
    }
 
-   public Object get(AppearanceField field)
+   public PropertyValue get(AppearanceField field)
    {
-      return appearanceMap.containsKey(field) ? appearanceMap.get(field).getData() : null;
+      return appearanceMap.containsKey(field) ? appearanceMap.get(field).getValue() : null;
    }
 
    public Optional<String> tryGet(CharacterField field)
    {
-      return Optional.ofNullable(propertyMap.get(field)).map(Property::getData).map(Objects::toString);
+      return Optional.ofNullable(propertyMap.get(field)).map(Property::getValue).map(PropertyValue::getDisplayValue);
    }
 
    public Optional<Boolean> isSelected(CharacterField field)
    {
-      return Optional.ofNullable(propertyMap.get(field)).filter(p -> p.getType() == PropertyType.BOOL).map(Property::getData).map(Boolean.class::cast);
-   }
-
-   List<Property> getProperties(CharacterField field)
-   {
-      Property property = propertyMap.get(field);
-      if (property == null || property.getType() != PropertyType.STRUCT)
-      {
-         return Collections.emptyList();
-      }
-      return ((List<?>) propertyMap.get(field).getData()).stream()
-            .map(Property.class::cast)
-            .collect(Collectors.toList());
+      return Optional.ofNullable(propertyMap.get(field))
+            .filter(p -> p.getType() == PropertyType.BOOL)
+            .map(Property::getValue)
+            .map(BoolPropertyValue.class::cast)
+            .map(BoolPropertyValue::getValue);
    }
 
    public <T extends Enum<T> & StaticEnum> Optional<T> getAppearanceEnum(AppearanceField field, Class<T> cls)
    {
       return Optional.ofNullable(appearanceMap.get(field))
             .filter(p -> p.getType() == PropertyType.INT)
-            .map(Property::getData)
-            .map(Integer.class::cast)
+            .map(Property::getValue)
+            .map(IntPropertyValue.class::cast)
+            .map(IntPropertyValue::getValue)
             .flatMap(v -> StaticEnum.fromValue(cls, v));
+   }
+
+   ArrayPropertyValue.Entry toEntry()
+   {
+      return new ArrayPropertyValue.Entry(new ArrayList<>(propertyMap.values()));
    }
 
    @Override

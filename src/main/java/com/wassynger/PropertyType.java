@@ -35,4 +35,9 @@ public enum PropertyType
    {
       this.name = name;
    }
+
+   public String getName()
+   {
+      return name;
+   }
 }

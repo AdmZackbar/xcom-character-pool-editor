@@ -11,12 +11,15 @@ public class MainView extends BorderPane
 {
    private static final EventType<Event> ANY = new EventType<>(Event.ANY, "CHAR_POOL_EDITOR");
    public static final EventType<Event> ON_LOAD = new EventType<>(ANY, "ON_LOAD");
+   public static final EventType<Event> ON_SAVE = new EventType<>(ANY, "ON_SAVE");
    public static final EventType<Event> ON_QUIT = new EventType<>(ANY, "ON_QUIT");
 
    private final CharPoolView charPoolView;
 
    @FXML
    private MenuItem itemLoad;
+   @FXML
+   private MenuItem itemSave;
    @FXML
    private MenuItem itemQuit;
    @FXML
@@ -33,6 +36,8 @@ public class MainView extends BorderPane
    private void initialize()
    {
       itemLoad.setOnAction(event -> this.fireEvent(new Event(ON_LOAD)));
+      itemSave.setOnAction(event -> this.fireEvent(new Event(ON_SAVE)));
+      itemSave.disableProperty().bind(charPoolView.charPoolProperty().isNull());
       itemQuit.setOnAction(event -> this.fireEvent(new Event(ON_QUIT)));
    }
 

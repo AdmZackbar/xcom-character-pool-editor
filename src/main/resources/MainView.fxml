@@ -12,6 +12,7 @@
     <MenuBar BorderPane.alignment="CENTER">
       <Menu mnemonicParsing="false" text="File">
         <MenuItem fx:id="itemLoad" mnemonicParsing="false" text="Load..."/>
+        <MenuItem fx:id="itemSave" mnemonicParsing="false" text="Save..."/>
         <MenuItem fx:id="itemQuit" mnemonicParsing="false" text="Quit"/>
       </Menu>
     </MenuBar>
