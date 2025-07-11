@@ -104,7 +104,7 @@ public class CharPoolView extends BorderPane
             .bind(Bindings.createObjectBinding(this::computeAppearanceDetail,
                   segButtonEdit.getToggleGroup().selectedToggleProperty()));
 
-      listChar.setCellFactory(list -> new FormattedListCell<>(this::formatCharacter));
+      listChar.setCellFactory(list -> new FormattedListCell<>(this::computeFullName));
       listChar.getSelectionModel()
             .selectedItemProperty()
             .addListener((obs, old, newValue) -> onSelectedCharChanged(newValue));
@@ -142,11 +142,12 @@ public class CharPoolView extends BorderPane
       return null;
    }
 
-   private String formatCharacter(Character c)
+   private String computeFullName(Character c)
    {
       String fName = c.tryGet(CharacterField.FIRST_NAME).orElse("");
       String lName = c.tryGet(CharacterField.LAST_NAME).orElse("");
       return c.tryGet(CharacterField.NICKNAME)
+            .filter(s -> !s.isEmpty())
             .map(nName -> String.format("%s %s %s", fName, nName, lName))
             .orElse(String.format("%s %s", fName, lName));
    }
