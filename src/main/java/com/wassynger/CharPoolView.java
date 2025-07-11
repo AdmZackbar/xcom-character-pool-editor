@@ -1,5 +1,8 @@
 package com.wassynger;
 
+import java.util.Comparator;
+import java.util.stream.Collectors;
+
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -49,7 +52,7 @@ public class CharPoolView extends BorderPane
    @FXML
    private ComboBox<String> cBoxCountry;
    @FXML
-   private ComboBox<String> cBoxSType;
+   private ComboBox<CharacterTemplate> cBoxSType;
    @FXML
    private ComboBox<String> cBoxClass;
    @FXML
@@ -109,6 +112,13 @@ public class CharPoolView extends BorderPane
             .selectedItemProperty()
             .addListener((obs, old, newValue) -> onSelectedCharChanged(newValue));
 
+      cBoxSType.setCellFactory(list -> new FormattedListCell<>(CharacterTemplate::getLocalizedString));
+      cBoxSType.setButtonCell(new FormattedListCell<>(CharacterTemplate::getLocalizedString));
+      cBoxSType.getItems()
+            .addAll(CharacterTemplate.getAll()
+                  .stream()
+                  .sorted(Comparator.comparing(CharacterTemplate::getLocalizedString))
+                  .collect(Collectors.toList()));
       cBoxRace.setCellFactory(list -> new FormattedListCell<>(StaticEnum::getLocalizedString));
       cBoxRace.setButtonCell(new FormattedListCell<>(StaticEnum::getLocalizedString));
       cBoxRace.getItems().addAll(Race.values());
@@ -177,7 +187,12 @@ public class CharPoolView extends BorderPane
       fieldBio.setText(newValue.tryGet(CharacterField.BIOGRAPHY).orElse(""));
       labelCreationDate.setText(newValue.tryGet(CharacterField.CREATION_DATE).orElse("Unknown"));
       setCBoxValue(cBoxCountry, newValue.get(CharacterField.COUNTRY));
-      setCBoxValue(cBoxSType, newValue.get(CharacterField.TEMPLATE));
+      CharacterTemplate template = CharacterTemplate.getOrAdd(newValue.get(CharacterField.TEMPLATE).getDisplayValue());
+      if (!cBoxSType.getItems().contains(template))
+      {
+         cBoxSType.getItems().add(template);
+      }
+      cBoxSType.getSelectionModel().select(template);
       setCBoxValue(cBoxClass, newValue.get(CharacterField.CLASS));
       // TODO handle unknown cases for race/attitude/gender
       newValue.getAppearanceEnum(AppearanceField.RACE, Race.class).ifPresent(cBoxRace.getSelectionModel()::select);
