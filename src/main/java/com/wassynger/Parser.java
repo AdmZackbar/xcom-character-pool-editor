@@ -83,7 +83,7 @@ class Parser
          return null;
       }
       readPadding();
-      Property.Type type = Property.Type.get(getAscii());
+      PropertyType type = PropertyType.get(getAscii());
       readPadding();
       switch (type)
       {
@@ -110,7 +110,7 @@ class Parser
       assertIntValue(0);
       readPadding();
       boolean value = getBool();
-      return new Property(name, Property.Type.BOOL, value);
+      return new Property(PropertyType.BOOL, name, value);
    }
 
    private Property readInt(String name)
@@ -119,7 +119,7 @@ class Parser
       assertIntValue(Integer.BYTES);
       readPadding();
       int value = getInt();
-      return new Property(name, Property.Type.INT, value);
+      return new Property(PropertyType.INT, name, value);
    }
 
    private Property readString(String name)
@@ -130,7 +130,7 @@ class Parser
       readPadding();
       String value = getAscii();
       assertSize(size + Integer.BYTES);
-      return new Property(name, Property.Type.STRING, value);
+      return new Property(PropertyType.STRING, name, value);
    }
 
    private Property readName(String name)
@@ -140,7 +140,7 @@ class Parser
       markStart();
       readPadding();
       String value = getAscii();
-      Property property = new Property(name, Property.Type.NAME, value);
+      Property property = new Property(PropertyType.NAME, name, value);
       // Don't know what this value is, but it's not always 0
       getInt();
       assertSize(size + Integer.BYTES);
@@ -165,7 +165,7 @@ class Parser
          property = next();
       }
       assertSize(size);
-      return new Property(name, Property.Type.STRUCT, properties);
+      return new Property(PropertyType.STRUCT, name, properties);
    }
 
    private Property readArray(String name)
@@ -200,9 +200,9 @@ class Parser
             property = next();
          }
          // Wrap the properties in a struct property
-         children.add(new Property(String.format("Child %d", i), Property.Type.STRUCT, properties));
+         children.add(new Property(PropertyType.STRUCT, String.format("Child %d", i), properties));
       }
-      return new Property(name, Property.Type.ARRAY, children);
+      return new Property(PropertyType.ARRAY, name, children);
    }
 
    /* ******* *

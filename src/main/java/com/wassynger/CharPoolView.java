@@ -146,8 +146,8 @@ public class CharPoolView extends BorderPane
 
    private String formatCharacter(Character c)
    {
-      return String.format("%s %s %s", c.get(CharacterProperty.FIRST_NAME), c.get(CharacterProperty.NICKNAME),
-            c.get(CharacterProperty.LAST_NAME));
+      return String.format("%s %s %s", c.get(CharacterField.FIRST_NAME), c.get(CharacterField.NICKNAME),
+            c.get(CharacterField.LAST_NAME));
    }
 
    private void onCharPoolChanged(CharacterPool newValue)
@@ -169,62 +169,62 @@ public class CharPoolView extends BorderPane
       {
          return;
       }
-      fieldFName.setText(newValue.get(CharacterProperty.FIRST_NAME));
-      fieldLName.setText(newValue.get(CharacterProperty.LAST_NAME));
+      fieldFName.setText((String) newValue.get(CharacterField.FIRST_NAME));
+      fieldLName.setText((String) newValue.get(CharacterField.LAST_NAME));
       fieldNName.setText(getNickname(newValue));
-      fieldBio.setText(newValue.get(CharacterProperty.BIOGRAPHY));
-      labelCreationDate.setText(newValue.tryGet(CharacterProperty.CREATION_DATE).orElse("Unknown"));
-      setCBoxValue(cBoxCountry, newValue.get(CharacterProperty.COUNTRY));
-      setCBoxValue(cBoxSType, newValue.get(CharacterProperty.TEMPLATE));
-      setCBoxValue(cBoxClass, newValue.get(CharacterProperty.CLASS));
+      fieldBio.setText((String) newValue.get(CharacterField.BIOGRAPHY));
+      labelCreationDate.setText(newValue.tryGet(CharacterField.CREATION_DATE).orElse("Unknown"));
+      setCBoxValue(cBoxCountry, newValue.get(CharacterField.COUNTRY));
+      setCBoxValue(cBoxSType, newValue.get(CharacterField.TEMPLATE));
+      setCBoxValue(cBoxClass, newValue.get(CharacterField.CLASS));
       // TODO handle unknown cases for race/attitude/gender
-      newValue.getAppearanceEnum(AppearanceProperty.RACE, Race.class).ifPresent(cBoxRace.getSelectionModel()::select);
-      setCBoxValue(cBoxVoice, newValue.get(AppearanceProperty.VOICE_NAME));
-      newValue.getAppearanceEnum(AppearanceProperty.ATTITUDE, Personality.class)
+      newValue.getAppearanceEnum(AppearanceField.RACE, Race.class).ifPresent(cBoxRace.getSelectionModel()::select);
+      setCBoxValue(cBoxVoice, newValue.get(AppearanceField.VOICE_NAME));
+      newValue.getAppearanceEnum(AppearanceField.ATTITUDE, Personality.class)
             .ifPresent(cBoxAttitude.getSelectionModel()::select);
-      chkSoldier.setSelected(newValue.isSelected(CharacterProperty.IS_SOLDIER));
-      chkVip.setSelected(newValue.isSelected(CharacterProperty.IS_VIP));
-      chkDarkVip.setSelected(newValue.isSelected(CharacterProperty.IS_DARK_VIP));
-      newValue.getAppearanceEnum(AppearanceProperty.GENDER, Gender.class)
+      chkSoldier.setSelected(newValue.isSelected(CharacterField.IS_SOLDIER).orElse(true));
+      chkVip.setSelected(newValue.isSelected(CharacterField.IS_VIP).orElse(true));
+      chkDarkVip.setSelected(newValue.isSelected(CharacterField.IS_DARK_VIP).orElse(true));
+      newValue.getAppearanceEnum(AppearanceField.GENDER, Gender.class)
             .map(g -> g == Gender.MALE ? buttonMale : buttonFemale)
             .ifPresent(b -> b.setSelected(true));
       // Head subview
-      setCBoxValue(headView.cBoxHelmet, newValue.get(AppearanceProperty.HELMET));
-      setCBoxValue(headView.cBoxHead, newValue.get(AppearanceProperty.HEAD));
-      setCBoxValue(headView.cBoxSkinColor, newValue.get(AppearanceProperty.SKIN_COLOR));
-      setCBoxValue(headView.cBoxEyeColor, newValue.get(AppearanceProperty.EYE_COLOR));
-      setCBoxValue(headView.cBoxScar, newValue.get(AppearanceProperty.SCARS));
-      setCBoxValue(headView.cBoxPaint, newValue.get(AppearanceProperty.FACE_PAINT));
-      setCBoxValue(headView.cBoxHair, newValue.get(AppearanceProperty.HAIRCUT));
-      setCBoxValue(headView.cBoxFaceHair, newValue.get(AppearanceProperty.FACIAL_HAIR));
-      setCBoxValue(headView.cBoxHairColor, newValue.get(AppearanceProperty.HAIR_COLOR));
-      setCBoxValue(headView.cBoxPropUpper, newValue.get(AppearanceProperty.FACE_PROP_UPPER));
-      setCBoxValue(headView.cBoxPropLower, newValue.get(AppearanceProperty.FACE_PROP_LOWER));
+      setCBoxValue(headView.cBoxHelmet, newValue.get(AppearanceField.HELMET));
+      setCBoxValue(headView.cBoxHead, newValue.get(AppearanceField.HEAD));
+      setCBoxValue(headView.cBoxSkinColor, newValue.get(AppearanceField.SKIN_COLOR));
+      setCBoxValue(headView.cBoxEyeColor, newValue.get(AppearanceField.EYE_COLOR));
+      setCBoxValue(headView.cBoxScar, newValue.get(AppearanceField.SCARS));
+      setCBoxValue(headView.cBoxPaint, newValue.get(AppearanceField.FACE_PAINT));
+      setCBoxValue(headView.cBoxHair, newValue.get(AppearanceField.HAIRCUT));
+      setCBoxValue(headView.cBoxFaceHair, newValue.get(AppearanceField.FACIAL_HAIR));
+      setCBoxValue(headView.cBoxHairColor, newValue.get(AppearanceField.HAIR_COLOR));
+      setCBoxValue(headView.cBoxPropUpper, newValue.get(AppearanceField.FACE_PROP_UPPER));
+      setCBoxValue(headView.cBoxPropLower, newValue.get(AppearanceField.FACE_PROP_LOWER));
       // Body subview
-      setCBoxValue(bodyView.cBoxTorso, newValue.get(AppearanceProperty.TORSO));
-      setCBoxValue(bodyView.cBoxTorsoDeco, newValue.get(AppearanceProperty.TORSO_DECO));
-      setCBoxValue(bodyView.cBoxTorsoUnder, newValue.get(AppearanceProperty.TORSO_UNDERLAY));
-      setCBoxValue(bodyView.cBoxArms, newValue.get(AppearanceProperty.ARMS));
-      setCBoxValue(bodyView.cBoxArmsUnder, newValue.get(AppearanceProperty.ARMS_UNDERLAY));
-      setCBoxValue(bodyView.cBoxArmLeft, newValue.get(AppearanceProperty.LEFT_ARM));
-      setCBoxValue(bodyView.cBoxForearmLeft, newValue.get(AppearanceProperty.LEFT_FOREARM));
-      setCBoxValue(bodyView.cBoxArmLeftDeco, newValue.get(AppearanceProperty.LEFT_ARM_DECO));
-      setCBoxValue(bodyView.cBoxArmRight, newValue.get(AppearanceProperty.RIGHT_ARM));
-      setCBoxValue(bodyView.cBoxForearmRight, newValue.get(AppearanceProperty.RIGHT_FOREARM));
-      setCBoxValue(bodyView.cBoxArmRightDeco, newValue.get(AppearanceProperty.RIGHT_ARM_DECO));
-      setCBoxValue(bodyView.cBoxLegs, newValue.get(AppearanceProperty.LEGS));
-      setCBoxValue(bodyView.cBoxLegsUnder, newValue.get(AppearanceProperty.LEGS_UNDERLAY));
-      setCBoxValue(bodyView.cBoxThighs, newValue.get(AppearanceProperty.THIGHS));
-      setCBoxValue(bodyView.cBoxShins, newValue.get(AppearanceProperty.SHINS));
+      setCBoxValue(bodyView.cBoxTorso, newValue.get(AppearanceField.TORSO));
+      setCBoxValue(bodyView.cBoxTorsoDeco, newValue.get(AppearanceField.TORSO_DECO));
+      setCBoxValue(bodyView.cBoxTorsoUnder, newValue.get(AppearanceField.TORSO_UNDERLAY));
+      setCBoxValue(bodyView.cBoxArms, newValue.get(AppearanceField.ARMS));
+      setCBoxValue(bodyView.cBoxArmsUnder, newValue.get(AppearanceField.ARMS_UNDERLAY));
+      setCBoxValue(bodyView.cBoxArmLeft, newValue.get(AppearanceField.LEFT_ARM));
+      setCBoxValue(bodyView.cBoxForearmLeft, newValue.get(AppearanceField.LEFT_FOREARM));
+      setCBoxValue(bodyView.cBoxArmLeftDeco, newValue.get(AppearanceField.LEFT_ARM_DECO));
+      setCBoxValue(bodyView.cBoxArmRight, newValue.get(AppearanceField.RIGHT_ARM));
+      setCBoxValue(bodyView.cBoxForearmRight, newValue.get(AppearanceField.RIGHT_FOREARM));
+      setCBoxValue(bodyView.cBoxArmRightDeco, newValue.get(AppearanceField.RIGHT_ARM_DECO));
+      setCBoxValue(bodyView.cBoxLegs, newValue.get(AppearanceField.LEGS));
+      setCBoxValue(bodyView.cBoxLegsUnder, newValue.get(AppearanceField.LEGS_UNDERLAY));
+      setCBoxValue(bodyView.cBoxThighs, newValue.get(AppearanceField.THIGHS));
+      setCBoxValue(bodyView.cBoxShins, newValue.get(AppearanceField.SHINS));
       // Weapon subview
-      setCBoxValue(weaponView.cBoxTint, newValue.get(AppearanceProperty.WEAPON_TINT));
-      setCBoxValue(weaponView.cBoxPattern, newValue.get(AppearanceProperty.WEAPON_PATTERN));
+      setCBoxValue(weaponView.cBoxTint, newValue.get(AppearanceField.WEAPON_TINT));
+      setCBoxValue(weaponView.cBoxPattern, newValue.get(AppearanceField.WEAPON_PATTERN));
    }
 
    private String getNickname(Character character)
    {
       // Remove surrounding ' quotes
-      return character.tryGet(CharacterProperty.NICKNAME)
+      return character.tryGet(CharacterField.NICKNAME)
             .filter(str -> str.length() > 2)
             .map(str -> str.substring(1, str.length() - 1))
             .orElse("");

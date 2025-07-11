@@ -1,30 +1,28 @@
 package com.wassynger;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
-class Property
+final class Property
 {
+   private final PropertyType type;
    private final String name;
-   private final Type type;
    private final Object data;
 
-   public Property(String name, Type type, Object data)
+   public Property(PropertyType type, String name, Object data)
    {
-      this.name = name;
       this.type = type;
+      this.name = name;
       this.data = data;
+   }
+
+   public PropertyType getType()
+   {
+      return type;
    }
 
    public String getName()
    {
       return name;
-   }
-
-   public Type getType()
-   {
-      return type;
    }
 
    public Object getData()
@@ -35,39 +33,23 @@ class Property
    @Override
    public String toString()
    {
-      return "Property{" + "name='" + name + '\'' + ", type=" + type + ", data=" + data + '}';
+      return "Property{" + "type=" + type + ", name='" + name + '\'' + ", data=" + data + '}';
    }
 
-   public enum Type
+   @Override
+   public boolean equals(Object o)
    {
-      STRING("StrProperty"),
-      NAME("NameProperty"),
-      INT("IntProperty"),
-      BOOL("BoolProperty"),
-      STRUCT("StructProperty"),
-      ARRAY("ArrayProperty");
-
-      private static final Map<String, Type> NAME_MAP;
-
-      static
+      if (!(o instanceof Property))
       {
-         NAME_MAP = new HashMap<>();
-         for (Type type : Type.values())
-         {
-            NAME_MAP.put(type.name, type);
-         }
+         return false;
       }
+      Property property = (Property) o;
+      return type == property.type && Objects.equals(name, property.name) && Objects.equals(data, property.data);
+   }
 
-      public static Type get(String str)
-      {
-         return Objects.requireNonNull(NAME_MAP.get(str));
-      }
-
-      private final String name;
-
-      Type(String name)
-      {
-         this.name = name;
-      }
+   @Override
+   public int hashCode()
+   {
+      return Objects.hash(type, name, data);
    }
 }

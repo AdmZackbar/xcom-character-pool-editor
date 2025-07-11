@@ -5,6 +5,7 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleButton?>
@@ -16,7 +17,6 @@
 <?import javafx.scene.layout.StackPane?>
 <?import org.controlsfx.control.SegmentedButton?>
 
-<?import javafx.scene.control.ScrollPane?>
 <fx:root type="BorderPane" prefWidth="800.0" prefHeight="600.0" stylesheets="@main.css"
          xmlns="http://javafx.com/javafx/8.0.151" xmlns:fx="http://javafx.com/fxml/1">
   <left>

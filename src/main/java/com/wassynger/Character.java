@@ -1,68 +1,71 @@
 package com.wassynger;
 
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Character
 {
-   private final Map<CharacterProperty, Property> propertyMap;
-   private final Map<AppearanceProperty, Property> appearanceMap;
+   private final Map<CharacterField, Property> propertyMap;
+   private final Map<AppearanceField, Property> appearanceMap;
 
    Character(List<Property> data)
    {
-      this.propertyMap = new EnumMap<>(CharacterProperty.class);
-      this.appearanceMap = new EnumMap<>(AppearanceProperty.class);
+      this.propertyMap = new EnumMap<>(CharacterField.class);
+      this.appearanceMap = new EnumMap<>(AppearanceField.class);
       for (Property property : data)
       {
-         CharacterProperty.get(property.getName()).ifPresent(n -> propertyMap.put(n, property));
+         CharacterField.get(property.getName()).ifPresent(n -> propertyMap.put(n, property));
       }
-      if (propertyMap.containsKey(CharacterProperty.APPEARANCE))
+      if (propertyMap.containsKey(CharacterField.APPEARANCE))
       {
-         for (Property property : getProperties(CharacterProperty.APPEARANCE))
+         for (Property property : getProperties(CharacterField.APPEARANCE))
          {
-            AppearanceProperty.get(property.getName()).ifPresent(p -> appearanceMap.put(p, property));
+            AppearanceField.get(property.getName()).ifPresent(p -> appearanceMap.put(p, property));
          }
       }
    }
 
-   public String get(CharacterProperty property)
+   public Object get(CharacterField field)
    {
-      return (String) propertyMap.get(property).getData();
+      return propertyMap.containsKey(field) ? propertyMap.get(field).getData() : null;
    }
 
-   public Object get(AppearanceProperty property)
+   public Object get(AppearanceField field)
    {
-      return appearanceMap.containsKey(property) ? appearanceMap.get(property).getData() : null;
+      return appearanceMap.containsKey(field) ? appearanceMap.get(field).getData() : null;
    }
 
-   public Optional<String> tryGet(CharacterProperty property)
+   public Optional<String> tryGet(CharacterField field)
    {
-      return Optional.ofNullable(propertyMap.get(property)).map(Property::getData).map(String.class::cast);
+      return Optional.ofNullable(propertyMap.get(field)).map(Property::getData).map(Objects::toString);
    }
 
-   public void set(CharacterProperty property, String value)
+   public Optional<Boolean> isSelected(CharacterField field)
    {
-      propertyMap.put(property, new Property(property.getRaw(), Property.Type.STRING, value));
+      return Optional.ofNullable(propertyMap.get(field)).filter(p -> p.getType() == PropertyType.BOOL).map(Property::getData).map(Boolean.class::cast);
    }
 
-   public boolean isSelected(CharacterProperty property)
+   List<Property> getProperties(CharacterField field)
    {
-      return (Boolean) propertyMap.get(property).getData();
-   }
-
-   List<Property> getProperties(CharacterProperty property)
-   {
-      return ((List<?>) propertyMap.get(property).getData()).stream()
+      Property property = propertyMap.get(field);
+      if (property == null || property.getType() != PropertyType.STRUCT)
+      {
+         return Collections.emptyList();
+      }
+      return ((List<?>) propertyMap.get(field).getData()).stream()
             .map(Property.class::cast)
             .collect(Collectors.toList());
    }
 
-   public <T extends Enum<T> & StaticEnum> Optional<T> getAppearanceEnum(AppearanceProperty property, Class<T> cls)
+   public <T extends Enum<T> & StaticEnum> Optional<T> getAppearanceEnum(AppearanceField field, Class<T> cls)
    {
-      return Optional.ofNullable(appearanceMap.get(property))
+      return Optional.ofNullable(appearanceMap.get(field))
+            .filter(p -> p.getType() == PropertyType.INT)
             .map(Property::getData)
             .map(Integer.class::cast)
             .flatMap(v -> StaticEnum.fromValue(cls, v));
