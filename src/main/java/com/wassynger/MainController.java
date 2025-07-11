@@ -46,9 +46,9 @@ public class MainController
 
    private void loadPool(File file)
    {
-      try
+      try (PropertyReaderImpl reader = new PropertyReaderImpl(file.toPath()))
       {
-         view.getCharPoolView().setCharPool(CharPoolReader.load(file.toPath()));
+         view.getCharPoolView().setCharPool(reader.readCharacterPool());
       }
       catch (IOException e)
       {

@@ -15,7 +15,7 @@ public final class Property
          return 0;
       }
       // size of string (int) + string length + null terminator
-      return Integer.BYTES + (str.getBytes(StandardCharsets.US_ASCII)).length + Byte.BYTES;
+      return Integer.BYTES + (str.getBytes(StandardCharsets.UTF_8)).length + Byte.BYTES;
    }
 
    private final PropertyType type;

@@ -75,7 +75,7 @@ final class PropertyWriterImpl implements PropertyWriter
       // size + 1 (for null terminator)
       int len = str.length() + 1;
       write(len);
-      os.write(createBuffer(len).put(str.getBytes(StandardCharsets.US_ASCII)).put((byte) 0).array());
+      os.write(createBuffer(len).put(str.getBytes(StandardCharsets.UTF_8)).put((byte) 0).array());
    }
 
    @Override
