@@ -50,9 +50,9 @@ public class CharPoolView extends BorderPane
    @FXML
    private TextArea fieldBio;
    @FXML
-   private ComboBox<String> cBoxCountry;
+   private ComboBox<StringEntry> cBoxCountry;
    @FXML
-   private ComboBox<CharacterTemplate> cBoxSType;
+   private ComboBox<StringEntry> cBoxSType;
    @FXML
    private ComboBox<String> cBoxClass;
    @FXML
@@ -112,19 +112,19 @@ public class CharPoolView extends BorderPane
             .selectedItemProperty()
             .addListener((obs, old, newValue) -> onSelectedCharChanged(newValue));
 
-      cBoxSType.setCellFactory(list -> new FormattedListCell<>(CharacterTemplate::getLocalizedString));
-      cBoxSType.setButtonCell(new FormattedListCell<>(CharacterTemplate::getLocalizedString));
-      cBoxSType.getItems()
-            .addAll(CharacterTemplate.getAll()
-                  .stream()
-                  .sorted(Comparator.comparing(CharacterTemplate::getLocalizedString))
-                  .collect(Collectors.toList()));
+      cBoxCountry.setCellFactory(list -> new FormattedListCell<>(StringEntry::getLocalized));
+      cBoxCountry.setButtonCell(new FormattedListCell<>(StringEntry::getLocalized));
+      cBoxSType.setCellFactory(list -> new FormattedListCell<>(StringEntry::getLocalized));
+      cBoxSType.setButtonCell(new FormattedListCell<>(StringEntry::getLocalized));
       cBoxRace.setCellFactory(list -> new FormattedListCell<>(StaticEnum::getLocalizedString));
       cBoxRace.setButtonCell(new FormattedListCell<>(StaticEnum::getLocalizedString));
       cBoxRace.getItems().addAll(Race.values());
       cBoxAttitude.setCellFactory(list -> new FormattedListCell<>(StaticEnum::getLocalizedString));
       cBoxAttitude.setButtonCell(new FormattedListCell<>(StaticEnum::getLocalizedString));
       cBoxAttitude.getItems().addAll(Personality.values());
+
+      // Load info
+      refresh();
    }
 
    private void onSelectedAppearanceToggleChanged(Toggle old, Toggle newValue)
@@ -186,13 +186,10 @@ public class CharPoolView extends BorderPane
       fieldNName.setText(getNickname(newValue));
       fieldBio.setText(newValue.tryGet(CharacterField.BIOGRAPHY).orElse(""));
       labelCreationDate.setText(newValue.tryGet(CharacterField.CREATION_DATE).orElse("Unknown"));
-      setCBoxValue(cBoxCountry, newValue.get(CharacterField.COUNTRY));
-      CharacterTemplate template = CharacterTemplate.getOrAdd(newValue.get(CharacterField.TEMPLATE).getDisplayValue());
-      if (!cBoxSType.getItems().contains(template))
-      {
-         cBoxSType.getItems().add(template);
-      }
-      cBoxSType.getSelectionModel().select(template);
+      setCBoxValue(cBoxCountry,
+            StringTemplate.COUNTRY.getOrAdd(newValue.get(CharacterField.COUNTRY).getDisplayValue()));
+      setCBoxValue(cBoxSType,
+            StringTemplate.CHARACTER.getOrAdd(newValue.get(CharacterField.TEMPLATE).getDisplayValue()));
       setCBoxValue(cBoxClass, newValue.get(CharacterField.CLASS));
       // TODO handle unknown cases for race/attitude/gender
       newValue.getAppearanceEnum(AppearanceField.RACE, Race.class).ifPresent(cBoxRace.getSelectionModel()::select);
@@ -247,6 +244,15 @@ public class CharPoolView extends BorderPane
             .orElse("");
    }
 
+   private void setCBoxValue(ComboBox<StringEntry> cBox, StringEntry entry)
+   {
+      if (!cBox.getItems().contains(entry))
+      {
+         cBox.getItems().add(entry);
+      }
+      cBox.getSelectionModel().select(entry);
+   }
+
    private void setCBoxValue(ComboBox<String> cBox, PropertyValue value)
    {
       if (value == null)
@@ -271,6 +277,26 @@ public class CharPoolView extends BorderPane
    public ObjectProperty<CharacterPool> charPoolProperty()
    {
       return charPool;
+   }
+
+   public void refresh()
+   {
+      refresh(cBoxCountry, StringTemplate.COUNTRY);
+      refresh(cBoxSType, StringTemplate.CHARACTER);
+      // Need to refresh selection now that we have reloaded values
+      onSelectedCharChanged(listChar.getSelectionModel().getSelectedItem());
+   }
+
+   private void refresh(ComboBox<StringEntry> cBox, StringTemplate template)
+   {
+      // Can't use setAll - causes visual bug with the button cell where the
+      // selected value doesn't get updated
+      cBox.getItems().clear();
+      cBox.getItems()
+            .addAll(template.getAll()
+                  .stream()
+                  .sorted(Comparator.comparing(StringEntry::getLocalized))
+                  .collect(Collectors.toList()));
    }
 
    static class HeadView extends GridPane
