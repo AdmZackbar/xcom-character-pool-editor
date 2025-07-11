@@ -2,8 +2,12 @@ package com.wassynger;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
+/**
+ * All supported types of {@link Property}.
+ *
+ * @author Zach Wassynger
+ */
 public enum PropertyType
 {
    STRING("StrProperty"),
@@ -24,9 +28,21 @@ public enum PropertyType
       }
    }
 
+   /**
+    * Finds and returns the property type that is represented by the given
+    * string.
+    *
+    * @param str the given string
+    * @return the property type
+    * @throws IllegalArgumentException if the type does not exist for the string
+    */
    public static PropertyType get(String str)
    {
-      return Objects.requireNonNull(NAME_MAP.get(str));
+      if (!NAME_MAP.containsKey(str))
+      {
+         throw new IllegalArgumentException(String.format("no type exists for %s", str));
+      }
+      return NAME_MAP.get(str);
    }
 
    private final String name;
@@ -36,6 +52,11 @@ public enum PropertyType
       this.name = name;
    }
 
+   /**
+    * Returns the raw string that represents this type when serialized.
+    *
+    * @return the name
+    */
    public String getName()
    {
       return name;
