@@ -6,8 +6,6 @@ import javafx.stage.Stage;
 
 public class MainApplication extends Application
 {
-   private MainController controller = null;
-
    public static void main(String[] args)
    {
       launch(args);
@@ -16,7 +14,8 @@ public class MainApplication extends Application
    @Override
    public void start(Stage primaryStage)
    {
-      controller = new MainController();
+      MainController controller = new MainController();
+      primaryStage.setTitle("XCOM Character Pool Editor");
       primaryStage.setScene(new Scene(controller.getView()));
       primaryStage.show();
    }
