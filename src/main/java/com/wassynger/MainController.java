@@ -14,8 +14,6 @@ public class MainController
 {
    private final MainView view;
 
-   private File recentDirectory = null;
-
    public MainController()
    {
       this.view = new MainView();
@@ -52,14 +50,11 @@ public class MainController
       fc.getExtensionFilters()
             .addAll(new FileChooser.ExtensionFilter("Binary file", "*.bin"),
                   new FileChooser.ExtensionFilter("Any", "*"));
-      if (recentDirectory != null)
-      {
-         fc.setInitialDirectory(recentDirectory);
-      }
+      Config.INSTANCE.getFile(Config.Setting.LOAD_POOL_DIR).ifPresent(fc::setInitialDirectory);
       List<File> files = fc.showOpenMultipleDialog(view.getScene().getWindow());
       if (files != null && !files.isEmpty())
       {
-         recentDirectory = files.get(0).getParentFile();
+         Config.INSTANCE.set(Config.Setting.LOAD_POOL_DIR, files.get(0).getParentFile());
          files.forEach(this::loadPool);
       }
    }
@@ -96,14 +91,11 @@ public class MainController
       FileChooser fc = new FileChooser();
       fc.setTitle("Save Pool to File");
       fc.setInitialFileName(view.getCharPoolView().getCharPool().getName());
-      if (recentDirectory != null)
-      {
-         fc.setInitialDirectory(recentDirectory);
-      }
+      Config.INSTANCE.getFile(Config.Setting.LOAD_POOL_DIR).ifPresent(fc::setInitialDirectory);
       File file = fc.showSaveDialog(view.getScene().getWindow());
       if (file != null)
       {
-         recentDirectory = file.getParentFile();
+         Config.INSTANCE.set(Config.Setting.LOAD_POOL_DIR, file.getParentFile());
          savePool(file);
       }
    }
@@ -124,9 +116,11 @@ public class MainController
    {
       DirectoryChooser dc = new DirectoryChooser();
       dc.setTitle("Select Mod Directory");
+      Config.INSTANCE.getFile(Config.Setting.LOAD_MOD_DIR).ifPresent(dc::setInitialDirectory);
       File directory = dc.showDialog(view.getScene().getWindow());
       if (directory != null)
       {
+         Config.INSTANCE.set(Config.Setting.LOAD_MOD_DIR, directory);
          loadMod(directory);
       }
    }
