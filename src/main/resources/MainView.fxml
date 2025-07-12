@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
 
 <fx:root type="BorderPane" id="mainView" prefWidth="1200.0" prefHeight="800.0" stylesheets="@main.css"
          xmlns="http://javafx.com/javafx/8.0.151" xmlns:fx="http://javafx.com/fxml/1">
@@ -20,7 +25,32 @@
     </MenuBar>
   </top>
   <left>
-    <ListView fx:id="listPool" prefWidth="180.0" BorderPane.alignment="CENTER"/>
+    <BorderPane id="leftView" prefWidth="240.0" BorderPane.alignment="CENTER">
+      <top>
+        <GridPane hgap="4.0" vgap="4.0" BorderPane.alignment="CENTER">
+          <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES"/>
+            <ColumnConstraints/>
+            <ColumnConstraints/>
+            <ColumnConstraints/>
+          </columnConstraints>
+          <rowConstraints>
+            <RowConstraints/>
+          </rowConstraints>
+          <padding>
+            <Insets bottom="2.0" left="8.0" top="4.0" right="4.0"/>
+          </padding>
+          <Label styleClass="h3" text="Character Pools"/>
+          <Button fx:id="buttonAddPool" mnemonicParsing="false" text="+" GridPane.columnIndex="1"/>
+          <Button fx:id="buttonRemovePool" mnemonicParsing="false" prefWidth="25.0" text="-"
+                  GridPane.columnIndex="2"/>
+          <Button fx:id="buttonLoadPool" mnemonicParsing="false" text="..." GridPane.columnIndex="3"/>
+        </GridPane>
+      </top>
+      <center>
+        <ListView fx:id="listPool" BorderPane.alignment="CENTER"/>
+      </center>
+    </BorderPane>
   </left>
   <center>
     <Label fx:id="labelPlaceholder" text="No Data" BorderPane.alignment="CENTER"/>

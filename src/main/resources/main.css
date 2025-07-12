@@ -34,7 +34,13 @@
 
 /* MainView */
 
-#mainView > #listPool .cell {
+#mainView #leftView {
+    -fx-border-width: 0 1 0 0;
+    -fx-border-color: -fx-box-border;
+}
+
+#mainView #listPool .cell {
+    -fx-font-size: 1.083333em;
     -fx-font-weight: bold;
 }
 

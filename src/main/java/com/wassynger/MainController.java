@@ -3,6 +3,7 @@ package com.wassynger;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -18,9 +19,11 @@ public class MainController
    {
       this.view = new MainView();
       view.addEventHandler(MainView.ON_QUIT, event -> onQuit());
-      view.addEventHandler(MainView.ON_LOAD, event -> onLoad());
-      view.addEventHandler(MainView.ON_SAVE, event -> onSave());
-      view.addEventHandler(MainView.ON_LOAD_MOD, event -> onLoadMod());
+      view.addEventHandler(MainView.ON_POOL_LOAD, event -> onLoad());
+      view.addEventHandler(MainView.ON_POOL_SAVE, event -> onSave());
+      view.addEventHandler(MainView.ON_POOL_ADD, event -> onAddPool());
+      view.addEventHandler(MainView.ON_POOL_REMOVE, event -> onRemovePool());
+      view.addEventHandler(MainView.ON_MOD_LOAD, event -> onLoadMod());
       tryLoadDefaultConfig();
    }
 
@@ -110,6 +113,19 @@ public class MainController
       {
          FxUtilities.showError("File Save Error", "Failed to save character pool", e);
       }
+   }
+
+   private void onAddPool()
+   {
+      // TODO get initial name from user?
+      view.getCharPools().add(new CharacterPool("NewPool", "NewPool.bin", Collections.emptyList()));
+   }
+
+   private void onRemovePool()
+   {
+      // will eventually need to guard against removing pools with unsaved
+      // changes (with a dialog confirmation)
+      view.getCharPools().remove(view.getCharPoolSelectionModel().getSelectedItem());
    }
 
    private void onLoadMod()

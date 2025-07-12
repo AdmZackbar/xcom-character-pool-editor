@@ -9,6 +9,7 @@ import javafx.event.Event;
 import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
@@ -18,9 +19,11 @@ import javafx.scene.layout.BorderPane;
 public class MainView extends BorderPane
 {
    private static final EventType<Event> ANY = new EventType<>(Event.ANY, "CHAR_POOL_EDITOR");
-   public static final EventType<Event> ON_LOAD = new EventType<>(ANY, "ON_LOAD");
-   public static final EventType<Event> ON_SAVE = new EventType<>(ANY, "ON_SAVE");
-   public static final EventType<Event> ON_LOAD_MOD = new EventType<>(ANY, "ON_LOAD_MOD");
+   public static final EventType<Event> ON_POOL_LOAD = new EventType<>(ANY, "ON_POOL_LOAD");
+   public static final EventType<Event> ON_POOL_SAVE = new EventType<>(ANY, "ON_POOL_SAVE");
+   public static final EventType<Event> ON_POOL_ADD = new EventType<>(ANY, "ON_POOL_ADD");
+   public static final EventType<Event> ON_POOL_REMOVE = new EventType<>(ANY, "ON_POOL_REMOVE");
+   public static final EventType<Event> ON_MOD_LOAD = new EventType<>(ANY, "ON_MOD_LOAD");
    public static final EventType<Event> ON_QUIT = new EventType<>(ANY, "ON_QUIT");
 
    private final ObservableList<CharacterPool> charPools;
@@ -38,6 +41,12 @@ public class MainView extends BorderPane
    private Label labelPlaceholder;
    @FXML
    private ListView<CharacterPool> listPool;
+   @FXML
+   private Button buttonAddPool;
+   @FXML
+   private Button buttonRemovePool;
+   @FXML
+   private Button buttonLoadPool;
 
    public MainView()
    {
@@ -49,10 +58,10 @@ public class MainView extends BorderPane
    @FXML
    private void initialize()
    {
-      itemLoad.setOnAction(event -> this.fireEvent(new Event(ON_LOAD)));
-      itemSave.setOnAction(event -> this.fireEvent(new Event(ON_SAVE)));
+      itemLoad.setOnAction(event -> this.fireEvent(new Event(ON_POOL_LOAD)));
+      itemSave.setOnAction(event -> this.fireEvent(new Event(ON_POOL_SAVE)));
       itemSave.disableProperty().bind(charPoolView.charPoolProperty().isNull());
-      itemLoadMod.setOnAction(event -> this.fireEvent(new Event(ON_LOAD_MOD)));
+      itemLoadMod.setOnAction(event -> this.fireEvent(new Event(ON_MOD_LOAD)));
       itemQuit.setOnAction(event -> this.fireEvent(new Event(ON_QUIT)));
 
       listPool.setItems(charPools.sorted(Comparator.comparing(CharacterPool::getName)));
@@ -62,6 +71,11 @@ public class MainView extends BorderPane
             .then((Node) charPoolView)
             .otherwise(labelPlaceholder));
       labelPlaceholder.textProperty().bind(Bindings.createStringBinding(this::computePlaceholderText, charPools));
+
+      buttonAddPool.setOnAction(event -> this.fireEvent(new Event(ON_POOL_ADD)));
+      buttonRemovePool.setOnAction(event -> this.fireEvent(new Event(ON_POOL_REMOVE)));
+      buttonRemovePool.disableProperty().bind(charPoolView.charPoolProperty().isNull());
+      buttonLoadPool.setOnAction(event -> this.fireEvent(new Event(ON_POOL_LOAD)));
    }
 
    private String computePoolText(CharacterPool pool)
