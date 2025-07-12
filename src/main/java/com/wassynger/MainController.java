@@ -3,6 +3,7 @@ package com.wassynger;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -33,6 +34,7 @@ public class MainController
       view.addEventHandler(MainView.ON_POOL_REMOVE, event -> onRemovePool());
       view.addEventHandler(MainView.ON_MOD_LOAD, event -> onLoadMod());
       tryLoadDefaultConfig();
+      tryLoadPreviousPools();
    }
 
    private void tryLoadDefaultConfig()
@@ -45,7 +47,24 @@ public class MainController
       }
       catch (Exception e)
       {
-         System.err.printf("Failed to load base XCOM config: %s", e);
+         System.err.printf("Failed to load base XCOM config: %s%n", e);
+      }
+   }
+
+   private void tryLoadPreviousPools()
+   {
+      try
+      {
+         threadPool.execute(new LoadPoolTask(Config.INSTANCE.getList(Config.Setting.LOADED_MODS)
+               .stream()
+               .map(Paths::get)
+               .map(Path::toFile)
+               .filter(File::isFile)
+               .collect(Collectors.toList())));
+      }
+      catch (Exception e)
+      {
+         System.err.printf("Failed to load previous mods: %s", e);
       }
    }
 
@@ -88,7 +107,7 @@ public class MainController
    private void onAddPool()
    {
       // TODO get initial name from user?
-      view.getCharPools().add(new CharacterPool("NewPool", "NewPool.bin", Collections.emptyList()));
+      view.getCharPools().add(new CharacterPool(null, "NewPool", "NewPool.bin", Collections.emptyList()));
    }
 
    private void onRemovePool()

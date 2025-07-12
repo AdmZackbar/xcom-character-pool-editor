@@ -6,6 +6,9 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -14,6 +17,7 @@ public enum Config
    INSTANCE;
 
    private static final Path CONFIG_PATH = Paths.get("config.properties");
+   private static final String DELIMITER = ",";
 
    private final Properties config;
 
@@ -57,6 +61,14 @@ public enum Config
       return Optional.ofNullable(config.getProperty(setting.key)).map(File::new);
    }
 
+   public List<String> getList(Setting setting)
+   {
+      return Optional.ofNullable(config.getProperty(setting.key))
+            .map(str -> str.split(DELIMITER))
+            .map(Arrays::asList)
+            .orElse(Collections.emptyList());
+   }
+
    public void set(Setting setting, File file)
    {
       if (file == null)
@@ -67,10 +79,21 @@ public enum Config
       config.setProperty(setting.key, file.getAbsolutePath());
    }
 
+   public void set(Setting setting, List<String> values)
+   {
+      if (values == null || values.isEmpty())
+      {
+         config.remove(setting.key);
+         return;
+      }
+      config.setProperty(setting.key, String.join(DELIMITER, values));
+   }
+
    public enum Setting
    {
       LOAD_MOD_DIR("loadModDir"),
-      LOAD_POOL_DIR("loadPoolDir");
+      LOAD_POOL_DIR("loadPoolDir"),
+      LOADED_MODS("loadedMods");
 
       private final String key;
 

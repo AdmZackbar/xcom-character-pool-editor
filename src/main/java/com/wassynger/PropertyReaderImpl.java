@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
  */
 class PropertyReaderImpl implements AutoCloseable
 {
+   private final Path path;
    private final String fileName;
    private final InputStream is;
    // Contains the start positions of all tracked blobs
@@ -31,7 +32,7 @@ class PropertyReaderImpl implements AutoCloseable
 
    PropertyReaderImpl(Path path) throws IOException
    {
-      Objects.requireNonNull(path);
+      this.path = Objects.requireNonNull(path);
       // Remove trailing extension
       this.fileName = path.getFileName().toString().replaceFirst("\\..+$", "");
       this.is = Files.newInputStream(path);
@@ -74,7 +75,7 @@ class PropertyReaderImpl implements AutoCloseable
             .map(ArrayPropertyValue.Entry::getProperties)
             .map(Character::new)
             .collect(Collectors.toList());
-      return new CharacterPool(fileName, filePath, characters);
+      return new CharacterPool(path, fileName, filePath, characters);
    }
 
    private void readHeader() throws IOException

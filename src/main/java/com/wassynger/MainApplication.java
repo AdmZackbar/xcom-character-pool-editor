@@ -1,5 +1,8 @@
 package com.wassynger;
 
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -29,6 +32,13 @@ public class MainApplication extends Application
    {
       // Will eventually want to check if we have unsaved work or some other
       // reason to deny a shutdown
+      Config.INSTANCE.set(Config.Setting.LOADED_MODS, controller.getView()
+            .getCharPools()
+            .stream()
+            .map(CharacterPool::getPath)
+            .filter(Objects::nonNull)
+            .map(Objects::toString)
+            .collect(Collectors.toList()));
       Config.INSTANCE.save();
       controller.shutdown();
    }
