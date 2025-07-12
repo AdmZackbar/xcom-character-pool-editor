@@ -1,10 +1,18 @@
 package com.wassynger;
 
+import java.util.Comparator;
+
+import javafx.beans.binding.Bindings;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.event.EventType;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SelectionModel;
 import javafx.scene.layout.BorderPane;
 
 public class MainView extends BorderPane
@@ -15,6 +23,7 @@ public class MainView extends BorderPane
    public static final EventType<Event> ON_LOAD_MOD = new EventType<>(ANY, "ON_LOAD_MOD");
    public static final EventType<Event> ON_QUIT = new EventType<>(ANY, "ON_QUIT");
 
+   private final ObservableList<CharacterPool> charPools;
    private final CharPoolView charPoolView;
 
    @FXML
@@ -27,12 +36,14 @@ public class MainView extends BorderPane
    private MenuItem itemQuit;
    @FXML
    private Label labelPlaceholder;
+   @FXML
+   private ListView<CharacterPool> listPool;
 
    public MainView()
    {
+      this.charPools = FXCollections.observableArrayList();
       this.charPoolView = new CharPoolView();
       FxUtilities.load("MainView.fxml", this);
-      setCenter(charPoolView);
    }
 
    @FXML
@@ -43,6 +54,38 @@ public class MainView extends BorderPane
       itemSave.disableProperty().bind(charPoolView.charPoolProperty().isNull());
       itemLoadMod.setOnAction(event -> this.fireEvent(new Event(ON_LOAD_MOD)));
       itemQuit.setOnAction(event -> this.fireEvent(new Event(ON_QUIT)));
+
+      listPool.setItems(charPools.sorted(Comparator.comparing(CharacterPool::getName)));
+      listPool.setCellFactory(list -> new FormattedListCell<>(this::computePoolText));
+      charPoolView.charPoolProperty().bind(listPool.getSelectionModel().selectedItemProperty());
+      centerProperty().bind(Bindings.when(charPoolView.charPoolProperty().isNotNull())
+            .then((Node) charPoolView)
+            .otherwise(labelPlaceholder));
+      labelPlaceholder.textProperty().bind(Bindings.createStringBinding(this::computePlaceholderText, charPools));
+   }
+
+   private String computePoolText(CharacterPool pool)
+   {
+      return String.format("%s (%d)", pool.getName(), pool.getCharacters().size());
+   }
+
+   private String computePlaceholderText()
+   {
+      if (charPools.isEmpty())
+      {
+         return "Load character pool to begin";
+      }
+      return "Select character pool to view";
+   }
+
+   public ObservableList<CharacterPool> getCharPools()
+   {
+      return charPools;
+   }
+
+   public SelectionModel<CharacterPool> getCharPoolSelectionModel()
+   {
+      return listPool.getSelectionModel();
    }
 
    public CharPoolView getCharPoolView()

@@ -1,3 +1,5 @@
+/* Generic */
+
 .pane-group {
     -fx-border-color: -fx-outer-border;
     -fx-border-width: 1;
@@ -28,6 +30,16 @@
     -fx-font-size: 1.25em;
     -fx-font-weight: bold;
 }
+
+
+/* MainView */
+
+#mainView > #listPool .cell {
+    -fx-font-weight: bold;
+}
+
+
+/* CharPoolView */
 
 
 #listChar .cell {

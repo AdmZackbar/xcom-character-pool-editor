@@ -32,7 +32,8 @@ class PropertyReaderImpl implements AutoCloseable
    PropertyReaderImpl(Path path) throws IOException
    {
       Objects.requireNonNull(path);
-      this.fileName = path.getFileName().toString();
+      // Remove trailing extension
+      this.fileName = path.getFileName().toString().replaceFirst("\\..+$", "");
       this.is = Files.newInputStream(path);
       this.startPos = new ArrayDeque<>();
    }

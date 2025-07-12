@@ -1,9 +1,9 @@
 package com.wassynger;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.stream.Stream;
 
 import javafx.stage.DirectoryChooser;
@@ -48,7 +48,7 @@ public class MainController
    private void onLoad()
    {
       FileChooser fc = new FileChooser();
-      fc.setTitle("Select Character Pool");
+      fc.setTitle("Select Character Pool(s)");
       fc.getExtensionFilters()
             .addAll(new FileChooser.ExtensionFilter("Binary file", "*.bin"),
                   new FileChooser.ExtensionFilter("Any", "*"));
@@ -56,11 +56,11 @@ public class MainController
       {
          fc.setInitialDirectory(recentDirectory);
       }
-      File file = fc.showOpenDialog(view.getScene().getWindow());
-      if (file != null)
+      List<File> files = fc.showOpenMultipleDialog(view.getScene().getWindow());
+      if (files != null && !files.isEmpty())
       {
-         recentDirectory = file.getParentFile();
-         loadPool(file);
+         recentDirectory = files.get(0).getParentFile();
+         files.forEach(this::loadPool);
       }
    }
 
@@ -68,12 +68,26 @@ public class MainController
    {
       try (PropertyReaderImpl reader = new PropertyReaderImpl(file.toPath()))
       {
-         view.getCharPoolView().setCharPool(reader.readCharacterPool());
+         CharacterPool newPool = reader.readCharacterPool();
+         // Check if we need to replace older loaded pool
+         for (int i = 0; i < view.getCharPools().size(); i++)
+         {
+            // Compare based on file name
+            if (view.getCharPools().get(i).getFileName().equals(newPool.getFileName()))
+            {
+               // Replace and select it
+               view.getCharPools().set(i, newPool);
+               view.getCharPoolSelectionModel().select(i);
+               return;
+            }
+         }
+         // Otherwise just add it and select it
+         view.getCharPools().add(newPool);
+         view.getCharPoolSelectionModel().select(newPool);
       }
-      catch (IOException e)
+      catch (Exception e)
       {
          FxUtilities.showError("File Load Error", "Failed to load character pool", e);
-         view.getCharPoolView().setCharPool(null);
       }
    }
 
@@ -103,7 +117,6 @@ public class MainController
       catch (Exception e)
       {
          FxUtilities.showError("File Save Error", "Failed to save character pool", e);
-         view.getCharPoolView().setCharPool(null);
       }
    }
 
