@@ -27,6 +27,7 @@ public class MainView extends BorderPane
    public static final EventType<Event> ON_QUIT = new EventType<>(ANY, "ON_QUIT");
 
    private final ObservableList<CharacterPool> charPools;
+   private final ProgressView progressView;
    private final CharPoolView charPoolView;
 
    @FXML
@@ -51,6 +52,7 @@ public class MainView extends BorderPane
    public MainView()
    {
       this.charPools = FXCollections.observableArrayList();
+      this.progressView = new ProgressView();
       this.charPoolView = new CharPoolView();
       FxUtilities.load("MainView.fxml", this);
    }
@@ -67,9 +69,8 @@ public class MainView extends BorderPane
       listPool.setItems(charPools.sorted(Comparator.comparing(CharacterPool::getName)));
       listPool.setCellFactory(list -> new FormattedListCell<>(this::computePoolText));
       charPoolView.charPoolProperty().bind(listPool.getSelectionModel().selectedItemProperty());
-      centerProperty().bind(Bindings.when(charPoolView.charPoolProperty().isNotNull())
-            .then((Node) charPoolView)
-            .otherwise(labelPlaceholder));
+      centerProperty().bind(Bindings.createObjectBinding(this::computeCenter, progressView.activeProperty(),
+            getCharPoolSelectionModel().selectedItemProperty()));
       labelPlaceholder.textProperty().bind(Bindings.createStringBinding(this::computePlaceholderText, charPools));
 
       buttonAddPool.setOnAction(event -> this.fireEvent(new Event(ON_POOL_ADD)));
@@ -81,6 +82,19 @@ public class MainView extends BorderPane
    private String computePoolText(CharacterPool pool)
    {
       return String.format("%s (%d)", pool.getName(), pool.getCharacters().size());
+   }
+
+   private Node computeCenter()
+   {
+      if (progressView.isActive())
+      {
+         return progressView;
+      }
+      if (getCharPoolSelectionModel().getSelectedItem() != null)
+      {
+         return charPoolView;
+      }
+      return labelPlaceholder;
    }
 
    private String computePlaceholderText()
@@ -100,6 +114,11 @@ public class MainView extends BorderPane
    public SelectionModel<CharacterPool> getCharPoolSelectionModel()
    {
       return listPool.getSelectionModel();
+   }
+
+   public ProgressView getProgressView()
+   {
+      return progressView;
    }
 
    public CharPoolView getCharPoolView()

@@ -47,7 +47,6 @@
 
 /* CharPoolView */
 
-
 #listChar .cell {
     -fx-font-weight: bold;
 }
@@ -60,4 +59,27 @@
 #viewAppDetail,
 #viewAppDetail .viewport {
     -fx-background-color: transparent;
+}
+
+
+/* Progress View */
+
+.progress-view {
+    -fx-padding: 8;
+}
+.progress-view .label {
+    -fx-font-size: 1.5em;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-light-text-color;
+    -fx-wrap-text: true;
+    -fx-background-color: #000000A0;
+    -fx-background-radius: 4;
+    -fx-padding: 2 8 2 8;
+}
+.progress-view .progress-indicator {
+    -fx-progress-color: #000000A0;
+}
+.progress-view .progress-indicator .percentage {
+    -fx-font-size: 1.5em;
+    -fx-font-weight: bold;
 }

@@ -5,18 +5,26 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javafx.concurrent.Task;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.WindowEvent;
 
 public class MainController
 {
+   private final ExecutorService threadPool;
    private final MainView view;
 
    public MainController()
    {
+      this.threadPool = Executors.newCachedThreadPool();
       this.view = new MainView();
       view.addEventHandler(MainView.ON_QUIT, event -> onQuit());
       view.addEventHandler(MainView.ON_POOL_LOAD, event -> onLoad());
@@ -58,60 +66,22 @@ public class MainController
       if (files != null && !files.isEmpty())
       {
          Config.INSTANCE.set(Config.Setting.LOAD_POOL_DIR, files.get(0).getParentFile());
-         files.forEach(this::loadPool);
-      }
-   }
-
-   private void loadPool(File file)
-   {
-      try (PropertyReaderImpl reader = new PropertyReaderImpl(file.toPath()))
-      {
-         CharacterPool newPool = reader.readCharacterPool();
-         // Check if we need to replace older loaded pool
-         for (int i = 0; i < view.getCharPools().size(); i++)
-         {
-            // Compare based on file name
-            if (view.getCharPools().get(i).getFileName().equals(newPool.getFileName()))
-            {
-               // Replace and select it
-               view.getCharPools().set(i, newPool);
-               view.getCharPoolSelectionModel().select(i);
-               return;
-            }
-         }
-         // Otherwise just add it and select it
-         view.getCharPools().add(newPool);
-         view.getCharPoolSelectionModel().select(newPool);
-      }
-      catch (Exception e)
-      {
-         FxUtilities.showError("File Load Error", "Failed to load character pool", e);
+         threadPool.execute(new LoadPoolTask(files));
       }
    }
 
    private void onSave()
    {
+      CharacterPool pool = Objects.requireNonNull(view.getCharPoolView().getCharPool());
       FileChooser fc = new FileChooser();
       fc.setTitle("Save Pool to File");
-      fc.setInitialFileName(view.getCharPoolView().getCharPool().getName());
+      fc.setInitialFileName(pool.getName());
       Config.INSTANCE.getFile(Config.Setting.LOAD_POOL_DIR).ifPresent(fc::setInitialDirectory);
       File file = fc.showSaveDialog(view.getScene().getWindow());
       if (file != null)
       {
          Config.INSTANCE.set(Config.Setting.LOAD_POOL_DIR, file.getParentFile());
-         savePool(file);
-      }
-   }
-
-   private void savePool(File file)
-   {
-      try (PropertyWriterImpl writer = new PropertyWriterImpl(file.toPath()))
-      {
-         writer.write(view.getCharPoolView().getCharPool());
-      }
-      catch (Exception e)
-      {
-         FxUtilities.showError("File Save Error", "Failed to save character pool", e);
+         threadPool.execute(new SavePoolTask(pool, file));
       }
    }
 
@@ -137,32 +107,161 @@ public class MainController
       if (directory != null)
       {
          Config.INSTANCE.set(Config.Setting.LOAD_MOD_DIR, directory);
-         loadMod(directory);
-      }
-   }
-
-   private void loadMod(File directory)
-   {
-      try (Stream<Path> files = Files.walk(directory.toPath()))
-      {
-         if (files.filter(Files::isRegularFile)
-               .filter(p -> "XComGame.int".equals(p.getFileName().toString()))
-               .findFirst()
-               .map(ConfigReader::loadXComGameIni)
-               .orElse(false))
-         {
-            // Reload info into view
-            view.getCharPoolView().refresh();
-         }
-      }
-      catch (Exception e)
-      {
-         FxUtilities.showError("Mod Load Error", "Failed to load mod", e);
+         threadPool.execute(new LoadModTask(directory));
       }
    }
 
    public MainView getView()
    {
       return view;
+   }
+
+   public void shutdown()
+   {
+      threadPool.shutdown();
+      try
+      {
+         if (!threadPool.awaitTermination(1, TimeUnit.MINUTES))
+         {
+            System.out.println("Thread pool failed to shutdown within a minute.");
+         }
+      }
+      catch (InterruptedException e)
+      {
+         Thread.currentThread().interrupt();
+      }
+   }
+
+   class LoadPoolTask extends Task<List<CharacterPool>>
+   {
+      private final List<File> files;
+
+      private int index = 0;
+
+      public LoadPoolTask(List<File> files)
+      {
+         this.files = files;
+         view.getProgressView().bind(this);
+      }
+
+      @Override
+      protected List<CharacterPool> call()
+      {
+         return files.stream().map(this::loadPool).filter(Objects::nonNull).collect(Collectors.toList());
+      }
+
+      private CharacterPool loadPool(File file)
+      {
+         updateMessage(String.format("Loading %s...", file.getName()));
+         updateProgress(index++, files.size());
+         try (PropertyReaderImpl reader = new PropertyReaderImpl(file.toPath()))
+         {
+            return reader.readCharacterPool();
+         }
+         catch (Exception e)
+         {
+            // TODO
+            return null;
+         }
+      }
+
+      @Override
+      protected void succeeded()
+      {
+         for (CharacterPool pool : getValue())
+         {
+            // Check if we need to replace older loaded pool
+            for (int i = 0; i < view.getCharPools().size(); i++)
+            {
+               // Compare based on file name
+               if (view.getCharPools().get(i).getFileName().equals(pool.getFileName()))
+               {
+                  // Replace and select it
+                  view.getCharPools().set(i, pool);
+                  view.getCharPoolSelectionModel().select(i);
+               }
+            }
+            // Otherwise just add it and select it
+            view.getCharPools().add(pool);
+            view.getCharPoolSelectionModel().select(pool);
+         }
+      }
+
+      @Override
+      protected void failed()
+      {
+         FxUtilities.showError("File Load Error", "Failed to load character pool", getException());
+      }
+   }
+
+   class SavePoolTask extends Task<Void>
+   {
+      private final CharacterPool pool;
+      private final File file;
+
+      public SavePoolTask(CharacterPool pool, File file)
+      {
+         this.pool = pool;
+         this.file = file;
+         view.getProgressView().bind(this);
+      }
+
+      @Override
+      protected Void call() throws Exception
+      {
+         updateMessage("Saving pool to file...");
+         try (PropertyWriterImpl writer = new PropertyWriterImpl(file.toPath()))
+         {
+            writer.write(pool);
+         }
+         return null;
+      }
+
+      @Override
+      protected void failed()
+      {
+         FxUtilities.showError("File Save Error", "Failed to save character pool", getException());
+      }
+   }
+
+   class LoadModTask extends Task<Boolean>
+   {
+      private final File directory;
+
+      public LoadModTask(File directory)
+      {
+         this.directory = directory;
+         view.getProgressView().bind(this);
+      }
+
+      @Override
+      protected Boolean call() throws Exception
+      {
+         updateMessage("Loading mod config...");
+         try (Stream<Path> files = Files.walk(directory.toPath()))
+         {
+            return files.filter(Files::isRegularFile)
+                  .filter(p -> "XComGame.int".equals(p.getFileName().toString()))
+                  .findFirst()
+                  .map(ConfigReader::loadXComGameIni)
+                  .orElse(false);
+         }
+      }
+
+      @Override
+      protected void succeeded()
+      {
+         if (getValue())
+         {
+            // Reload info into view
+            view.getCharPoolView().refresh();
+         }
+      }
+
+      @Override
+      protected void failed()
+      {
+         FxUtilities.showError("Mod Load Error", "Failed to load mod", getException());
+      }
    }
 }

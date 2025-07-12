@@ -7,6 +7,8 @@ import javafx.stage.WindowEvent;
 
 public class MainApplication extends Application
 {
+   private MainController controller;
+
    public static void main(String[] args)
    {
       launch(args);
@@ -16,7 +18,7 @@ public class MainApplication extends Application
    public void start(Stage primaryStage)
    {
       Config.INSTANCE.load();
-      MainController controller = new MainController();
+      controller = new MainController();
       primaryStage.setTitle("XCOM Character Pool Editor");
       primaryStage.setScene(new Scene(controller.getView()));
       primaryStage.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, event -> handleCloseRequest());
@@ -28,5 +30,6 @@ public class MainApplication extends Application
       // Will eventually want to check if we have unsaved work or some other
       // reason to deny a shutdown
       Config.INSTANCE.save();
+      controller.shutdown();
    }
 }
