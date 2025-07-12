@@ -6,13 +6,17 @@ import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.event.Event;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
@@ -25,6 +29,10 @@ import org.controlsfx.control.SegmentedButton;
 
 public class CharPoolView extends BorderPane
 {
+   private static final EventType<Event> ANY = new EventType<>(Event.ANY, "CHAR_POOL_VIEW");
+   public static final EventType<Event> ON_CHAR_ADD = new EventType<>(ANY, "ON_CHAR_ADD");
+   public static final EventType<Event> ON_CHAR_REMOVE = new EventType<>(ANY, "ON_CHAR_REMOVE");
+
    private final ObjectProperty<CharacterPool> charPool;
    private final StackPane viewPlaceholder;
    private final HeadView headView;
@@ -49,6 +57,10 @@ public class CharPoolView extends BorderPane
    private TextField fieldNName;
    @FXML
    private TextArea fieldBio;
+   @FXML
+   private Button buttonAddChar;
+   @FXML
+   private Button buttonRemoveChar;
    @FXML
    private ComboBox<StringEntry> cBoxCountry;
    @FXML
@@ -106,6 +118,10 @@ public class CharPoolView extends BorderPane
       viewAppDetail.contentProperty()
             .bind(Bindings.createObjectBinding(this::computeAppearanceDetail,
                   segButtonEdit.getToggleGroup().selectedToggleProperty()));
+
+      buttonAddChar.setOnAction(event -> this.fireEvent(new Event(ON_CHAR_ADD)));
+      buttonRemoveChar.setOnAction(event -> this.fireEvent(new Event(ON_CHAR_REMOVE)));
+      buttonRemoveChar.disableProperty().bind(getCharSelectionModel().selectedItemProperty().isNull());
 
       listChar.setCellFactory(list -> new FormattedListCell<>(this::computeFullName));
       listChar.getSelectionModel()
@@ -282,6 +298,11 @@ public class CharPoolView extends BorderPane
    public ObjectProperty<CharacterPool> charPoolProperty()
    {
       return charPool;
+   }
+
+   public SelectionModel<Character> getCharSelectionModel()
+   {
+      return listChar.getSelectionModel();
    }
 
    public void refresh()

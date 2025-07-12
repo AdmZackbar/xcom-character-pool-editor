@@ -47,6 +47,11 @@
 
 /* CharPoolView */
 
+.char-pool-view #leftView {
+    -fx-border-width: 0 1 0 0;
+    -fx-border-color: -fx-box-border;
+}
+
 #listChar .cell {
     -fx-font-weight: bold;
 }

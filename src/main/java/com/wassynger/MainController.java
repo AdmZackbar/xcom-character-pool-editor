@@ -33,6 +33,8 @@ public class MainController
       view.addEventHandler(MainView.ON_POOL_ADD, event -> onAddPool());
       view.addEventHandler(MainView.ON_POOL_REMOVE, event -> onRemovePool());
       view.addEventHandler(MainView.ON_MOD_LOAD, event -> onLoadMod());
+      view.addEventHandler(CharPoolView.ON_CHAR_ADD, event -> onAddCharacter());
+      view.addEventHandler(CharPoolView.ON_CHAR_REMOVE, event -> onRemoveCharacter());
       tryLoadDefaultConfig();
       tryLoadPreviousPools();
    }
@@ -128,6 +130,16 @@ public class MainController
          Config.INSTANCE.set(Config.Setting.LOAD_MOD_DIR, directory);
          threadPool.execute(new LoadModTask(directory));
       }
+   }
+
+   private void onAddCharacter()
+   {
+      // TODO
+   }
+
+   private void onRemoveCharacter()
+   {
+      // TODO
    }
 
    public MainView getView()
