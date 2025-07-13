@@ -24,7 +24,6 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 
 import com.wassynger.xcom.pooleditor.data.AppearanceField;
-import com.wassynger.xcom.pooleditor.data.Character;
 import com.wassynger.xcom.pooleditor.data.CharacterField;
 import com.wassynger.xcom.pooleditor.data.EditableCharPool;
 import com.wassynger.xcom.pooleditor.data.EditableCharacter;
@@ -142,6 +141,7 @@ public class CharPoolView extends BorderPane
             .selectedItemProperty()
             .addListener((obs, old, newValue) -> onSelectedCharChanged(old, newValue));
 
+      fieldNName.textProperty().addListener((obs, old, newValue) -> onNicknameChanged(newValue));
       initStringEntryCBox(cBoxCountry, StringTemplate.COUNTRY, CharacterField.COUNTRY);
       initStringEntryCBox(cBoxSType, StringTemplate.CHARACTER, CharacterField.TEMPLATE);
       initStringEntryCBox(cBoxClass, StringTemplate.CLASS, CharacterField.CLASS);
@@ -237,6 +237,16 @@ public class CharPoolView extends BorderPane
             .orElse(String.format("%s %s%s", fName, lName, edited));
    }
 
+   private void onNicknameChanged(String newValue)
+   {
+      EditableCharacter character = listChar.getSelectionModel().getSelectedItem();
+      if (character != null)
+      {
+         character.strProperty(CharacterField.NICKNAME)
+               .set(newValue != null && !newValue.isEmpty() ? String.format("'%s'", newValue) : "");
+      }
+   }
+
    private void onCharPoolChanged(EditableCharPool newValue)
    {
       listChar.getSelectionModel().clearSelection();
@@ -254,7 +264,6 @@ public class CharPoolView extends BorderPane
    {
       Bindings.unbindBidirectional(fieldFName.textProperty(), character.strProperty(CharacterField.FIRST_NAME));
       Bindings.unbindBidirectional(fieldLName.textProperty(), character.strProperty(CharacterField.LAST_NAME));
-      Bindings.unbindBidirectional(fieldNName.textProperty(), character.strProperty(CharacterField.NICKNAME));
       Bindings.unbindBidirectional(fieldBio.textProperty(), character.strProperty(CharacterField.BIOGRAPHY));
       labelCreationDate.textProperty().unbind();
       Bindings.unbindBidirectional(chkSoldier.selectedProperty(), character.boolProperty(CharacterField.IS_SOLDIER));
@@ -274,7 +283,7 @@ public class CharPoolView extends BorderPane
       }
       Bindings.bindBidirectional(fieldFName.textProperty(), newValue.strProperty(CharacterField.FIRST_NAME));
       Bindings.bindBidirectional(fieldLName.textProperty(), newValue.strProperty(CharacterField.LAST_NAME));
-      Bindings.bindBidirectional(fieldNName.textProperty(), newValue.strProperty(CharacterField.NICKNAME));
+      fieldNName.setText(getNickname(newValue));
       Bindings.bindBidirectional(fieldBio.textProperty(), newValue.strProperty(CharacterField.BIOGRAPHY));
       labelCreationDate.textProperty()
             .bind(Bindings.when(newValue.editedProperty())
@@ -338,13 +347,11 @@ public class CharPoolView extends BorderPane
       setCBoxValue(weaponView.cBoxPattern, character.getBaseChar().get(AppearanceField.WEAPON_PATTERN));
    }
 
-   private String getNickname(Character character)
+   private String getNickname(EditableCharacter character)
    {
       // Remove surrounding ' quotes
-      return character.tryGet(CharacterField.NICKNAME)
-            .filter(str -> str.length() > 2)
-            .map(str -> str.substring(1, str.length() - 1))
-            .orElse("");
+      String raw = character.strProperty(CharacterField.NICKNAME).get();
+      return raw.length() > 2 ? raw.substring(1, raw.length() - 1) : "";
    }
 
    private void setCBoxValue(ComboBox<StringEntry> cBox, StringEntry entry)
