@@ -1,5 +1,6 @@
 package com.wassynger.xcom.pooleditor.ui;
 
+import javafx.beans.Observable;
 import javafx.scene.control.ListCell;
 import javafx.util.Callback;
 
@@ -15,7 +16,16 @@ public class FormattedListCell<T> extends ListCell<T>
     */
    public FormattedListCell(Callback<? super T, String> formatter)
    {
+      this(formatter, null);
+   }
+
+   public FormattedListCell(Callback<? super T, String> formatter, Observable observable)
+   {
       this.formatter = formatter;
+      if (observable != null)
+      {
+         observable.addListener(obs -> updateItem(getItem(), isEmpty()));
+      }
    }
 
    @Override

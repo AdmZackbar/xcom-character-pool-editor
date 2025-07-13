@@ -16,7 +16,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.layout.BorderPane;
 
-import com.wassynger.xcom.pooleditor.data.CharacterPool;
+import com.wassynger.xcom.pooleditor.data.EditableCharPool;
 import com.wassynger.xcom.pooleditor.ui.FormattedListCell;
 import com.wassynger.xcom.pooleditor.ui.FxUtilities;
 import com.wassynger.xcom.pooleditor.ui.ProgressView;
@@ -31,7 +31,7 @@ public class MainView extends BorderPane
    public static final EventType<Event> ON_MOD_LOAD = new EventType<>(ANY, "ON_MOD_LOAD");
    public static final EventType<Event> ON_QUIT = new EventType<>(ANY, "ON_QUIT");
 
-   private final ObservableList<CharacterPool> charPools;
+   private final ObservableList<EditableCharPool> charPools;
    private final ProgressView progressView;
    private final CharPoolView charPoolView;
 
@@ -46,7 +46,7 @@ public class MainView extends BorderPane
    @FXML
    private Label labelPlaceholder;
    @FXML
-   private ListView<CharacterPool> listPool;
+   private ListView<EditableCharPool> listPool;
    @FXML
    private Button buttonAddPool;
    @FXML
@@ -71,8 +71,10 @@ public class MainView extends BorderPane
       itemLoadMod.setOnAction(event -> this.fireEvent(new Event(ON_MOD_LOAD)));
       itemQuit.setOnAction(event -> this.fireEvent(new Event(ON_QUIT)));
 
-      listPool.setItems(charPools.sorted(Comparator.comparing(CharacterPool::getName)));
-      listPool.setCellFactory(list -> new FormattedListCell<>(this::computePoolText));
+      listPool.setItems(charPools.sorted(Comparator.comparing(p -> p.getBasePool().getName())));
+      getCharPoolSelectionModel().selectedItemProperty()
+            .addListener((obs, old, newValue) -> onSelectedPoolChanged(newValue));
+      onSelectedPoolChanged(null);
       charPoolView.charPoolProperty().bind(listPool.getSelectionModel().selectedItemProperty());
       centerProperty().bind(Bindings.createObjectBinding(this::computeCenter, progressView.activeProperty(),
             getCharPoolSelectionModel().selectedItemProperty()));
@@ -84,9 +86,16 @@ public class MainView extends BorderPane
       buttonLoadPool.setOnAction(event -> this.fireEvent(new Event(ON_POOL_LOAD)));
    }
 
-   private String computePoolText(CharacterPool pool)
+   private void onSelectedPoolChanged(EditableCharPool pool)
    {
-      return String.format("%s (%d)", pool.getName(), pool.getCharacters().size());
+      listPool.setCellFactory(
+            list -> new FormattedListCell<>(this::computePoolText, pool != null ? pool.editedProperty() : null));
+   }
+
+   private String computePoolText(EditableCharPool pool)
+   {
+      return String.format("%s (%d)%s", pool.getBasePool().getName(), pool.getCharacters().size(),
+            pool.isEdited() ? "*" : "");
    }
 
    private Node computeCenter()
@@ -111,12 +120,12 @@ public class MainView extends BorderPane
       return "Select character pool to view";
    }
 
-   public ObservableList<CharacterPool> getCharPools()
+   public ObservableList<EditableCharPool> getCharPools()
    {
       return charPools;
    }
 
-   public SelectionModel<CharacterPool> getCharPoolSelectionModel()
+   public SelectionModel<EditableCharPool> getCharPoolSelectionModel()
    {
       return listPool.getSelectionModel();
    }

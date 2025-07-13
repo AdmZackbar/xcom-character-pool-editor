@@ -1,6 +1,7 @@
 package com.wassynger.xcom.pooleditor.data;
 
 import java.io.IOException;
+import java.util.Objects;
 
 class IntPropertyValue implements PropertyValue
 {
@@ -43,5 +44,22 @@ class IntPropertyValue implements PropertyValue
    public String toString()
    {
       return "IntPropertyValue{" + "value=" + value + '}';
+   }
+
+   @Override
+   public boolean equals(Object o)
+   {
+      if (!(o instanceof IntPropertyValue))
+      {
+         return false;
+      }
+      IntPropertyValue that = (IntPropertyValue) o;
+      return value == that.value;
+   }
+
+   @Override
+   public int hashCode()
+   {
+      return Objects.hashCode(value);
    }
 }

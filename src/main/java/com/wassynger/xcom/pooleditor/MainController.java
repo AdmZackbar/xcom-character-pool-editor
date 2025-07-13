@@ -21,6 +21,7 @@ import javafx.stage.WindowEvent;
 import com.wassynger.xcom.pooleditor.data.CharacterPool;
 import com.wassynger.xcom.pooleditor.data.CharacterPoolReader;
 import com.wassynger.xcom.pooleditor.data.CharacterPoolWriter;
+import com.wassynger.xcom.pooleditor.data.EditableCharPool;
 import com.wassynger.xcom.pooleditor.ui.FxUtilities;
 
 public class MainController
@@ -98,7 +99,7 @@ public class MainController
 
    private void onSave()
    {
-      CharacterPool pool = Objects.requireNonNull(view.getCharPoolView().getCharPool());
+      CharacterPool pool = view.getCharPoolView().getCharPool().getBasePool();
       FileChooser fc = new FileChooser();
       fc.setTitle("Save Pool to File");
       fc.setInitialFileName(pool.getName());
@@ -114,7 +115,8 @@ public class MainController
    private void onAddPool()
    {
       // TODO get initial name from user?
-      view.getCharPools().add(new CharacterPool(null, "NewPool", "NewPool.bin", Collections.emptyList()));
+      view.getCharPools()
+            .add(EditableCharPool.create(new CharacterPool(null, "NewPool", "NewPool.bin", Collections.emptyList())));
    }
 
    private void onRemovePool()
@@ -204,23 +206,25 @@ public class MainController
       @Override
       protected void succeeded()
       {
-         for (CharacterPool pool : getValue())
+         getValue().stream().map(EditableCharPool::create).forEach(this::addOrReplacePool);
+      }
+
+      private void addOrReplacePool(EditableCharPool pool)
+      {
+         // Check if we need to replace older loaded pool
+         for (int i = 0; i < view.getCharPools().size(); i++)
          {
-            // Check if we need to replace older loaded pool
-            for (int i = 0; i < view.getCharPools().size(); i++)
+            // Compare based on file name
+            if (view.getCharPools().get(i).getBasePool().getFileName().equals(pool.getBasePool().getFileName()))
             {
-               // Compare based on file name
-               if (view.getCharPools().get(i).getFileName().equals(pool.getFileName()))
-               {
-                  // Replace and select it
-                  view.getCharPools().set(i, pool);
-                  view.getCharPoolSelectionModel().select(i);
-               }
+               // Replace and select it
+               view.getCharPools().set(i, pool);
+               view.getCharPoolSelectionModel().select(i);
             }
-            // Otherwise just add it and select it
-            view.getCharPools().add(pool);
-            view.getCharPoolSelectionModel().select(pool);
          }
+         // Otherwise just add it and select it
+         view.getCharPools().add(pool);
+         view.getCharPoolSelectionModel().select(pool);
       }
 
       @Override

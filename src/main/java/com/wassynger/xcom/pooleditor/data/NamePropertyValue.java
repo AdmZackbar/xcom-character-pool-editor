@@ -1,6 +1,7 @@
 package com.wassynger.xcom.pooleditor.data;
 
 import java.io.IOException;
+import java.util.Objects;
 
 class NamePropertyValue implements PropertyValue
 {
@@ -41,5 +42,22 @@ class NamePropertyValue implements PropertyValue
    public String toString()
    {
       return "NamePropertyValue{" + "str='" + str + '\'' + ", num=" + num + '}';
+   }
+
+   @Override
+   public boolean equals(Object o)
+   {
+      if (!(o instanceof NamePropertyValue))
+      {
+         return false;
+      }
+      NamePropertyValue that = (NamePropertyValue) o;
+      return num == that.num && Objects.equals(str, that.str);
+   }
+
+   @Override
+   public int hashCode()
+   {
+      return Objects.hash(str, num);
    }
 }

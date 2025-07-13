@@ -1,76 +1,76 @@
 package com.wassynger.xcom.pooleditor.data;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Character
 {
-   private final Map<CharacterField, Property> propertyMap;
-   private final Map<AppearanceField, Property> appearanceMap;
+   private static final String APPEARANCE_STRUCT_TYPE_NAME = "TAppearance";
 
-   Character(List<Property> data)
+   static Character fromProperties(List<Property> properties)
    {
-      this.propertyMap = new EnumMap<>(CharacterField.class);
-      this.appearanceMap = new EnumMap<>(AppearanceField.class);
-      for (Property property : data)
+      Map<PropertyField, PropertyValue> map = new LinkedHashMap<>();
+      for (Property property : properties)
       {
-         CharacterField.get(property.getName()).ifPresent(n -> propertyMap.put(n, property));
-      }
-      if (propertyMap.containsKey(CharacterField.APPEARANCE))
-      {
-         StructPropertyValue appearance = (StructPropertyValue) propertyMap.get(CharacterField.APPEARANCE).getValue();
-         for (Property property : appearance.getEntries())
+         if (CharacterField.APPEARANCE.getName().equals(property.getName()))
          {
-            AppearanceField.get(property.getName()).ifPresent(p -> appearanceMap.put(p, property));
+            // Special case, iterate and add children of appearance
+            StructPropertyValue appearance = (StructPropertyValue) property.getValue();
+            for (Property aProp : appearance.getEntries())
+            {
+               AppearanceField.get(aProp.getName()).ifPresent(f -> map.put(f, aProp.getValue()));
+            }
+         }
+         else
+         {
+            CharacterField.get(property.getName()).ifPresent(f -> map.put(f, property.getValue()));
          }
       }
+      return new Character(map);
    }
 
-   public PropertyValue get(CharacterField field)
+   private final Map<PropertyField, PropertyValue> map;
+
+   private Character(Map<PropertyField, PropertyValue> map)
    {
-      return propertyMap.containsKey(field) ? propertyMap.get(field).getValue() : null;
+      this.map = map;
    }
 
-   public PropertyValue get(AppearanceField field)
+   public PropertyValue get(PropertyField field)
    {
-      return appearanceMap.containsKey(field) ? appearanceMap.get(field).getValue() : null;
+      return map.get(field);
    }
 
-   public Optional<String> tryGet(CharacterField field)
+   public Optional<String> tryGet(PropertyField field)
    {
-      return Optional.ofNullable(propertyMap.get(field)).map(Property::getValue).map(PropertyValue::getDisplayValue);
-   }
-
-   public Optional<Boolean> isSelected(CharacterField field)
-   {
-      return Optional.ofNullable(propertyMap.get(field))
-            .filter(p -> p.getType() == PropertyType.BOOL)
-            .map(Property::getValue)
-            .map(BoolPropertyValue.class::cast)
-            .map(BoolPropertyValue::getValue);
-   }
-
-   public <T extends Enum<T> & StaticEnum> Optional<T> getAppearanceEnum(AppearanceField field, Class<T> cls)
-   {
-      return Optional.ofNullable(appearanceMap.get(field))
-            .filter(p -> p.getType() == PropertyType.INT)
-            .map(Property::getValue)
-            .map(IntPropertyValue.class::cast)
-            .map(IntPropertyValue::getValue)
-            .flatMap(v -> StaticEnum.fromValue(cls, v));
+      return Optional.ofNullable(map.get(field)).map(PropertyValue::getDisplayValue);
    }
 
    ArrayPropertyValue.Entry toEntry()
    {
-      return new ArrayPropertyValue.Entry(new ArrayList<>(propertyMap.values()));
+      return new ArrayPropertyValue.Entry(Stream.concat(
+                  map.entrySet().stream().map(e -> new Property(e.getKey().getType(), e.getKey().getName(),
+                        e.getValue())),
+                  Stream.of(new Property(PropertyType.STRUCT, CharacterField.APPEARANCE.getName(),
+                        new StructPropertyValue(APPEARANCE_STRUCT_TYPE_NAME, computePropertyValues()))))
+            .collect(Collectors.toList()));
+   }
+
+   private List<Property> computePropertyValues()
+   {
+      return map.entrySet()
+            .stream()
+            .map(e -> new Property(e.getKey().getType(), e.getKey().getName(), e.getValue()))
+            .collect(Collectors.toList());
    }
 
    @Override
    public String toString()
    {
-      return "Character{" + "propertyMap=" + propertyMap + '}';
+      return "Character{" + "map=" + map + '}';
    }
 }

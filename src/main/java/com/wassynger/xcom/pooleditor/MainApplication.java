@@ -8,8 +8,6 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-import com.wassynger.xcom.pooleditor.data.CharacterPool;
-
 public class MainApplication extends Application
 {
    private MainController controller;
@@ -37,7 +35,7 @@ public class MainApplication extends Application
       Config.INSTANCE.set(Config.Setting.LOADED_MODS, controller.getView()
             .getCharPools()
             .stream()
-            .map(CharacterPool::getPath)
+            .map(p -> p.getBasePool().getPath())
             .filter(Objects::nonNull)
             .map(Objects::toString)
             .collect(Collectors.toList()));

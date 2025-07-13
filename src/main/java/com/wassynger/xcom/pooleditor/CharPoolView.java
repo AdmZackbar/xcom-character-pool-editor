@@ -1,11 +1,9 @@
 package com.wassynger.xcom.pooleditor;
 
-import java.util.Comparator;
-import java.util.stream.Collectors;
-
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
 import javafx.event.Event;
 import javafx.event.EventType;
 import javafx.fxml.FXML;
@@ -28,9 +26,11 @@ import javafx.scene.layout.StackPane;
 import com.wassynger.xcom.pooleditor.data.AppearanceField;
 import com.wassynger.xcom.pooleditor.data.Character;
 import com.wassynger.xcom.pooleditor.data.CharacterField;
-import com.wassynger.xcom.pooleditor.data.CharacterPool;
+import com.wassynger.xcom.pooleditor.data.EditableCharPool;
+import com.wassynger.xcom.pooleditor.data.EditableCharacter;
 import com.wassynger.xcom.pooleditor.data.Gender;
 import com.wassynger.xcom.pooleditor.data.Personality;
+import com.wassynger.xcom.pooleditor.data.PropertyField;
 import com.wassynger.xcom.pooleditor.data.PropertyValue;
 import com.wassynger.xcom.pooleditor.data.Race;
 import com.wassynger.xcom.pooleditor.data.StaticEnum;
@@ -46,7 +46,7 @@ public class CharPoolView extends BorderPane
    public static final EventType<Event> ON_CHAR_ADD = new EventType<>(ANY, "ON_CHAR_ADD");
    public static final EventType<Event> ON_CHAR_REMOVE = new EventType<>(ANY, "ON_CHAR_REMOVE");
 
-   private final ObjectProperty<CharacterPool> charPool;
+   private final ObjectProperty<EditableCharPool> charPool;
    private final StackPane viewPlaceholder;
    private final HeadView headView;
    private final BodyView bodyView;
@@ -57,7 +57,7 @@ public class CharPoolView extends BorderPane
    @FXML
    private ScrollPane viewAppDetail;
    @FXML
-   private ListView<Character> listChar;
+   private ListView<EditableCharacter> listChar;
    @FXML
    private Label labelPoolName;
    @FXML
@@ -136,29 +136,67 @@ public class CharPoolView extends BorderPane
       buttonRemoveChar.setOnAction(event -> this.fireEvent(new Event(ON_CHAR_REMOVE)));
       buttonRemoveChar.disableProperty().bind(getCharSelectionModel().selectedItemProperty().isNull());
 
-      listChar.setCellFactory(list -> new FormattedListCell<>(this::computeFullName));
+      listChar.setCellFactory(list -> new FormattedListCell<>(this::computeFullName,
+            listChar.getSelectionModel().selectedItemProperty()));
       listChar.getSelectionModel()
             .selectedItemProperty()
-            .addListener((obs, old, newValue) -> onSelectedCharChanged(newValue));
+            .addListener((obs, old, newValue) -> onSelectedCharChanged(old, newValue));
 
-      initStringEntryCBox(cBoxCountry);
-      initStringEntryCBox(cBoxSType);
-      initStringEntryCBox(cBoxClass);
-      cBoxRace.setCellFactory(list -> new FormattedListCell<>(StaticEnum::getLocalizedString));
-      cBoxRace.setButtonCell(new FormattedListCell<>(StaticEnum::getLocalizedString));
-      cBoxRace.getItems().addAll(Race.values());
-      cBoxAttitude.setCellFactory(list -> new FormattedListCell<>(StaticEnum::getLocalizedString));
-      cBoxAttitude.setButtonCell(new FormattedListCell<>(StaticEnum::getLocalizedString));
-      cBoxAttitude.getItems().addAll(Personality.values());
+      initStringEntryCBox(cBoxCountry, StringTemplate.COUNTRY, CharacterField.COUNTRY);
+      initStringEntryCBox(cBoxSType, StringTemplate.CHARACTER, CharacterField.TEMPLATE);
+      initStringEntryCBox(cBoxClass, StringTemplate.CLASS, CharacterField.CLASS);
+      segButtonSex.getToggleGroup().selectedToggleProperty().addListener((obs, old, newValue) ->
+      {
+         EditableCharacter character = listChar.getSelectionModel().getSelectedItem();
+         if (character != null)
+         {
+            character.intProperty(AppearanceField.GENDER)
+                  .set((newValue == buttonMale ? Gender.MALE : Gender.FEMALE).getValue());
+         }
+      });
+      initStaticEnumCBox(Race.class, cBoxRace, AppearanceField.RACE);
+      initStaticEnumCBox(Personality.class, cBoxAttitude, AppearanceField.ATTITUDE);
 
       // Load info
       refresh();
    }
 
-   private void initStringEntryCBox(ComboBox<StringEntry> cBox)
+   private void initStringEntryCBox(ComboBox<StringEntry> cBox, StringTemplate template, PropertyField field)
    {
+      cBox.getItems().addAll(template.getAll());
       cBox.setCellFactory(list -> new FormattedListCell<>(StringEntry::getLocalized));
       cBox.setButtonCell(new FormattedListCell<>(StringEntry::getLocalized));
+      cBox.getSelectionModel()
+            .selectedItemProperty()
+            .addListener((obs, old, newValue) -> onStringEntryCBoxSelectionChanged(newValue, field));
+   }
+
+   private void onStringEntryCBoxSelectionChanged(StringEntry newValue, PropertyField field)
+   {
+      EditableCharacter character = listChar.getSelectionModel().getSelectedItem();
+      if (character != null)
+      {
+         character.strProperty(field).set(newValue.getStr());
+      }
+   }
+
+   private <T extends StaticEnum> void initStaticEnumCBox(Class<T> cls, ComboBox<T> cBox, PropertyField field)
+   {
+      cBox.setCellFactory(list -> new FormattedListCell<>(StaticEnum::getLocalizedString));
+      cBox.setButtonCell(new FormattedListCell<>(StaticEnum::getLocalizedString));
+      cBox.getItems().addAll(cls.getEnumConstants());
+      cBox.getSelectionModel()
+            .selectedItemProperty()
+            .addListener((obs, old, newValue) -> onStaticEnumCBoxSelectionChanged(newValue, field));
+   }
+
+   private void onStaticEnumCBoxSelectionChanged(StaticEnum newValue, PropertyField field)
+   {
+      EditableCharacter character = listChar.getSelectionModel().getSelectedItem();
+      if (character != null)
+      {
+         character.intProperty(field).set(newValue.getValue());
+      }
    }
 
    private void onSelectedAppearanceToggleChanged(Toggle old, Toggle newValue)
@@ -186,87 +224,118 @@ public class CharPoolView extends BorderPane
       return null;
    }
 
-   private String computeFullName(Character c)
+   private String computeFullName(EditableCharacter c)
    {
-      String fName = c.tryGet(CharacterField.FIRST_NAME).orElse("");
-      String lName = c.tryGet(CharacterField.LAST_NAME).orElse("");
-      return c.tryGet(CharacterField.NICKNAME)
+      // TODO update
+      String fName = c.getBaseChar().tryGet(CharacterField.FIRST_NAME).orElse("");
+      String lName = c.getBaseChar().tryGet(CharacterField.LAST_NAME).orElse("");
+      String edited = c.isEdited() ? "*" : "";
+      return c.getBaseChar()
+            .tryGet(CharacterField.NICKNAME)
             .filter(s -> !s.isEmpty())
-            .map(nName -> String.format("%s %s %s", fName, nName, lName))
-            .orElse(String.format("%s %s", fName, lName));
+            .map(nName -> String.format("%s %s %s%s", fName, nName, lName, edited))
+            .orElse(String.format("%s %s%s", fName, lName, edited));
    }
 
-   private void onCharPoolChanged(CharacterPool newValue)
+   private void onCharPoolChanged(EditableCharPool newValue)
    {
+      listChar.getSelectionModel().clearSelection();
       if (newValue == null)
       {
          labelPoolName.setText("No Pool Opened");
-         listChar.getItems().clear();
+         listChar.setItems(FXCollections.emptyObservableList());
          return;
       }
-      labelPoolName.setText(newValue.getName());
-      listChar.getItems().setAll(newValue.getCharacters());
-      listChar.getSelectionModel().clearSelection();
+      labelPoolName.setText(newValue.getBasePool().getName());
+      listChar.setItems(newValue.getCharacters());
    }
 
-   private void onSelectedCharChanged(Character newValue)
+   private void unbindCharacter(EditableCharacter character)
    {
+      Bindings.unbindBidirectional(fieldFName.textProperty(), character.strProperty(CharacterField.FIRST_NAME));
+      Bindings.unbindBidirectional(fieldLName.textProperty(), character.strProperty(CharacterField.LAST_NAME));
+      Bindings.unbindBidirectional(fieldNName.textProperty(), character.strProperty(CharacterField.NICKNAME));
+      Bindings.unbindBidirectional(fieldBio.textProperty(), character.strProperty(CharacterField.BIOGRAPHY));
+      labelCreationDate.textProperty().unbind();
+      Bindings.unbindBidirectional(chkSoldier.selectedProperty(), character.boolProperty(CharacterField.IS_SOLDIER));
+      Bindings.unbindBidirectional(chkVip.selectedProperty(), character.boolProperty(CharacterField.IS_VIP));
+      Bindings.unbindBidirectional(chkDarkVip.selectedProperty(), character.boolProperty(CharacterField.IS_DARK_VIP));
+   }
+
+   private void onSelectedCharChanged(EditableCharacter old, EditableCharacter newValue)
+   {
+      if (old != null)
+      {
+         unbindCharacter(old);
+      }
       if (newValue == null)
       {
          return;
       }
-      fieldFName.setText(newValue.tryGet(CharacterField.FIRST_NAME).orElse(""));
-      fieldLName.setText(newValue.tryGet(CharacterField.LAST_NAME).orElse(""));
-      fieldNName.setText(getNickname(newValue));
-      fieldBio.setText(newValue.tryGet(CharacterField.BIOGRAPHY).orElse(""));
-      labelCreationDate.setText(newValue.tryGet(CharacterField.CREATION_DATE).orElse("Unknown"));
+      Bindings.bindBidirectional(fieldFName.textProperty(), newValue.strProperty(CharacterField.FIRST_NAME));
+      Bindings.bindBidirectional(fieldLName.textProperty(), newValue.strProperty(CharacterField.LAST_NAME));
+      Bindings.bindBidirectional(fieldNName.textProperty(), newValue.strProperty(CharacterField.NICKNAME));
+      Bindings.bindBidirectional(fieldBio.textProperty(), newValue.strProperty(CharacterField.BIOGRAPHY));
+      labelCreationDate.textProperty()
+            .bind(Bindings.when(newValue.editedProperty())
+                  .then("Edited")
+                  .otherwise(newValue.strProperty(CharacterField.CREATION_DATE)));
       setCBoxValue(cBoxCountry,
-            StringTemplate.COUNTRY.getOrAdd(newValue.get(CharacterField.COUNTRY).getDisplayValue()));
+            StringTemplate.COUNTRY.getOrAdd(newValue.getBaseChar().get(CharacterField.COUNTRY).getDisplayValue()));
       setCBoxValue(cBoxSType,
-            StringTemplate.CHARACTER.getOrAdd(newValue.get(CharacterField.TEMPLATE).getDisplayValue()));
-      setCBoxValue(cBoxClass, StringTemplate.CLASS.getOrAdd(newValue.get(CharacterField.CLASS).getDisplayValue()));
+            StringTemplate.CHARACTER.getOrAdd(newValue.getBaseChar().get(CharacterField.TEMPLATE).getDisplayValue()));
+      setCBoxValue(cBoxClass,
+            StringTemplate.CLASS.getOrAdd(newValue.getBaseChar().get(CharacterField.CLASS).getDisplayValue()));
+      Bindings.bindBidirectional(chkSoldier.selectedProperty(), newValue.boolProperty(CharacterField.IS_SOLDIER));
+      Bindings.bindBidirectional(chkVip.selectedProperty(), newValue.boolProperty(CharacterField.IS_VIP));
+      Bindings.bindBidirectional(chkDarkVip.selectedProperty(), newValue.boolProperty(CharacterField.IS_DARK_VIP));
+      updateAppearance(newValue);
+   }
+
+   private void updateAppearance(EditableCharacter character)
+   {
       // TODO handle unknown cases for race/attitude/gender
-      newValue.getAppearanceEnum(AppearanceField.RACE, Race.class).ifPresent(cBoxRace.getSelectionModel()::select);
-      setCBoxValue(cBoxVoice, newValue.get(AppearanceField.VOICE_NAME));
-      newValue.getAppearanceEnum(AppearanceField.ATTITUDE, Personality.class)
-            .ifPresent(cBoxAttitude.getSelectionModel()::select);
-      chkSoldier.setSelected(newValue.isSelected(CharacterField.IS_SOLDIER).orElse(true));
-      chkVip.setSelected(newValue.isSelected(CharacterField.IS_VIP).orElse(true));
-      chkDarkVip.setSelected(newValue.isSelected(CharacterField.IS_DARK_VIP).orElse(true));
-      newValue.getAppearanceEnum(AppearanceField.GENDER, Gender.class)
+      cBoxRace.getSelectionModel()
+            .select(StaticEnum.fromValue(Race.class, character.intProperty(AppearanceField.RACE).get()).orElse(null));
+      setCBoxValue(cBoxVoice, character.getBaseChar().get(AppearanceField.VOICE_NAME));
+      cBoxAttitude.getSelectionModel()
+            .select(StaticEnum.fromValue(Personality.class, character.intProperty(AppearanceField.ATTITUDE).get())
+                  .orElse(null));
+      StaticEnum.fromValue(Gender.class, character.intProperty(AppearanceField.GENDER).get())
             .map(g -> g == Gender.MALE ? buttonMale : buttonFemale)
             .ifPresent(b -> b.setSelected(true));
+      // TODO
       // Head subview
-      setCBoxValue(headView.cBoxHelmet, newValue.get(AppearanceField.HELMET));
-      setCBoxValue(headView.cBoxHead, newValue.get(AppearanceField.HEAD));
-      setCBoxValue(headView.cBoxSkinColor, newValue.get(AppearanceField.SKIN_COLOR));
-      setCBoxValue(headView.cBoxEyeColor, newValue.get(AppearanceField.EYE_COLOR));
-      setCBoxValue(headView.cBoxScar, newValue.get(AppearanceField.SCARS));
-      setCBoxValue(headView.cBoxPaint, newValue.get(AppearanceField.FACE_PAINT));
-      setCBoxValue(headView.cBoxHair, newValue.get(AppearanceField.HAIRCUT));
-      setCBoxValue(headView.cBoxFaceHair, newValue.get(AppearanceField.FACIAL_HAIR));
-      setCBoxValue(headView.cBoxHairColor, newValue.get(AppearanceField.HAIR_COLOR));
-      setCBoxValue(headView.cBoxPropUpper, newValue.get(AppearanceField.FACE_PROP_UPPER));
-      setCBoxValue(headView.cBoxPropLower, newValue.get(AppearanceField.FACE_PROP_LOWER));
+      setCBoxValue(headView.cBoxHelmet, character.getBaseChar().get(AppearanceField.HELMET));
+      setCBoxValue(headView.cBoxHead, character.getBaseChar().get(AppearanceField.HEAD));
+      setCBoxValue(headView.cBoxSkinColor, character.getBaseChar().get(AppearanceField.SKIN_COLOR));
+      setCBoxValue(headView.cBoxEyeColor, character.getBaseChar().get(AppearanceField.EYE_COLOR));
+      setCBoxValue(headView.cBoxScar, character.getBaseChar().get(AppearanceField.SCARS));
+      setCBoxValue(headView.cBoxPaint, character.getBaseChar().get(AppearanceField.FACE_PAINT));
+      setCBoxValue(headView.cBoxHair, character.getBaseChar().get(AppearanceField.HAIRCUT));
+      setCBoxValue(headView.cBoxFaceHair, character.getBaseChar().get(AppearanceField.FACIAL_HAIR));
+      setCBoxValue(headView.cBoxHairColor, character.getBaseChar().get(AppearanceField.HAIR_COLOR));
+      setCBoxValue(headView.cBoxPropUpper, character.getBaseChar().get(AppearanceField.FACE_PROP_UPPER));
+      setCBoxValue(headView.cBoxPropLower, character.getBaseChar().get(AppearanceField.FACE_PROP_LOWER));
       // Body subview
-      setCBoxValue(bodyView.cBoxTorso, newValue.get(AppearanceField.TORSO));
-      setCBoxValue(bodyView.cBoxTorsoDeco, newValue.get(AppearanceField.TORSO_DECO));
-      setCBoxValue(bodyView.cBoxTorsoUnder, newValue.get(AppearanceField.TORSO_UNDERLAY));
-      setCBoxValue(bodyView.cBoxArms, newValue.get(AppearanceField.ARMS));
-      setCBoxValue(bodyView.cBoxArmsUnder, newValue.get(AppearanceField.ARMS_UNDERLAY));
-      setCBoxValue(bodyView.cBoxArmLeft, newValue.get(AppearanceField.LEFT_ARM));
-      setCBoxValue(bodyView.cBoxForearmLeft, newValue.get(AppearanceField.LEFT_FOREARM));
-      setCBoxValue(bodyView.cBoxArmLeftDeco, newValue.get(AppearanceField.LEFT_ARM_DECO));
-      setCBoxValue(bodyView.cBoxArmRight, newValue.get(AppearanceField.RIGHT_ARM));
-      setCBoxValue(bodyView.cBoxForearmRight, newValue.get(AppearanceField.RIGHT_FOREARM));
-      setCBoxValue(bodyView.cBoxArmRightDeco, newValue.get(AppearanceField.RIGHT_ARM_DECO));
-      setCBoxValue(bodyView.cBoxLegs, newValue.get(AppearanceField.LEGS));
-      setCBoxValue(bodyView.cBoxLegsUnder, newValue.get(AppearanceField.LEGS_UNDERLAY));
-      setCBoxValue(bodyView.cBoxThighs, newValue.get(AppearanceField.THIGHS));
-      setCBoxValue(bodyView.cBoxShins, newValue.get(AppearanceField.SHINS));
+      setCBoxValue(bodyView.cBoxTorso, character.getBaseChar().get(AppearanceField.TORSO));
+      setCBoxValue(bodyView.cBoxTorsoDeco, character.getBaseChar().get(AppearanceField.TORSO_DECO));
+      setCBoxValue(bodyView.cBoxTorsoUnder, character.getBaseChar().get(AppearanceField.TORSO_UNDERLAY));
+      setCBoxValue(bodyView.cBoxArms, character.getBaseChar().get(AppearanceField.ARMS));
+      setCBoxValue(bodyView.cBoxArmsUnder, character.getBaseChar().get(AppearanceField.ARMS_UNDERLAY));
+      setCBoxValue(bodyView.cBoxArmLeft, character.getBaseChar().get(AppearanceField.LEFT_ARM));
+      setCBoxValue(bodyView.cBoxForearmLeft, character.getBaseChar().get(AppearanceField.LEFT_FOREARM));
+      setCBoxValue(bodyView.cBoxArmLeftDeco, character.getBaseChar().get(AppearanceField.LEFT_ARM_DECO));
+      setCBoxValue(bodyView.cBoxArmRight, character.getBaseChar().get(AppearanceField.RIGHT_ARM));
+      setCBoxValue(bodyView.cBoxForearmRight, character.getBaseChar().get(AppearanceField.RIGHT_FOREARM));
+      setCBoxValue(bodyView.cBoxArmRightDeco, character.getBaseChar().get(AppearanceField.RIGHT_ARM_DECO));
+      setCBoxValue(bodyView.cBoxLegs, character.getBaseChar().get(AppearanceField.LEGS));
+      setCBoxValue(bodyView.cBoxLegsUnder, character.getBaseChar().get(AppearanceField.LEGS_UNDERLAY));
+      setCBoxValue(bodyView.cBoxThighs, character.getBaseChar().get(AppearanceField.THIGHS));
+      setCBoxValue(bodyView.cBoxShins, character.getBaseChar().get(AppearanceField.SHINS));
       // Weapon subview
-      setCBoxValue(weaponView.cBoxTint, newValue.get(AppearanceField.WEAPON_TINT));
-      setCBoxValue(weaponView.cBoxPattern, newValue.get(AppearanceField.WEAPON_PATTERN));
+      setCBoxValue(weaponView.cBoxTint, character.getBaseChar().get(AppearanceField.WEAPON_TINT));
+      setCBoxValue(weaponView.cBoxPattern, character.getBaseChar().get(AppearanceField.WEAPON_PATTERN));
    }
 
    private String getNickname(Character character)
@@ -298,22 +367,22 @@ public class CharPoolView extends BorderPane
       cBox.getSelectionModel().selectFirst();
    }
 
-   public CharacterPool getCharPool()
+   public EditableCharPool getCharPool()
    {
       return charPool.get();
    }
 
-   public void setCharPool(CharacterPool charPool)
+   public void setCharPool(EditableCharPool charPool)
    {
       this.charPool.set(charPool);
    }
 
-   public ObjectProperty<CharacterPool> charPoolProperty()
+   public ObjectProperty<EditableCharPool> charPoolProperty()
    {
       return charPool;
    }
 
-   public SelectionModel<Character> getCharSelectionModel()
+   public SelectionModel<EditableCharacter> getCharSelectionModel()
    {
       return listChar.getSelectionModel();
    }
@@ -324,19 +393,19 @@ public class CharPoolView extends BorderPane
       refresh(cBoxSType, StringTemplate.CHARACTER);
       refresh(cBoxClass, StringTemplate.CLASS);
       // Need to refresh selection now that we have reloaded values
-      onSelectedCharChanged(listChar.getSelectionModel().getSelectedItem());
+      // TODO still needed?
+//      onSelectedCharChanged(null, listChar.getSelectionModel().getSelectedItem());
    }
 
    private void refresh(ComboBox<StringEntry> cBox, StringTemplate template)
    {
-      // Can't use setAll - causes visual bug with the button cell where the
-      // selected value doesn't get updated
-      cBox.getItems().clear();
-      cBox.getItems()
-            .addAll(template.getAll()
-                  .stream()
-                  .sorted(Comparator.comparing(StringEntry::getLocalized))
-                  .collect(Collectors.toList()));
+      for (StringEntry entry : template.getAll())
+      {
+         if (!cBox.getItems().contains(entry))
+         {
+            cBox.getItems().add(entry);
+         }
+      }
    }
 
    static class HeadView extends GridPane

@@ -74,7 +74,7 @@ class CharacterPoolReaderImpl implements CharacterPoolReader
       List<Character> characters = charPoolArrayProperty.getEntries()
             .stream()
             .map(ArrayPropertyValue.Entry::getProperties)
-            .map(Character::new)
+            .map(Character::fromProperties)
             .collect(Collectors.toList());
       return new CharacterPool(path, fileName, filePath, characters);
    }

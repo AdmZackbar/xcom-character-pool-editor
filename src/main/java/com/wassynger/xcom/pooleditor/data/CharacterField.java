@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public enum CharacterField
+public enum CharacterField implements PropertyField
 {
    FIRST_NAME("strFirstName", PropertyType.STRING),
    LAST_NAME("strLastName", PropertyType.STRING),
@@ -26,7 +26,7 @@ public enum CharacterField
       FIELD_MAP = new HashMap<>();
       for (CharacterField property : CharacterField.values())
       {
-         FIELD_MAP.put(property.getRaw(), property);
+         FIELD_MAP.put(property.getName(), property);
       }
    }
 
@@ -35,20 +35,22 @@ public enum CharacterField
       return Optional.ofNullable(FIELD_MAP.get(str));
    }
 
-   private final String raw;
+   private final String name;
    private final PropertyType type;
 
-   CharacterField(String raw, PropertyType type)
+   CharacterField(String name, PropertyType type)
    {
-      this.raw = raw;
+      this.name = name;
       this.type = type;
    }
 
-   public String getRaw()
+   @Override
+   public String getName()
    {
-      return raw;
+      return name;
    }
 
+   @Override
    public PropertyType getType()
    {
       return type;

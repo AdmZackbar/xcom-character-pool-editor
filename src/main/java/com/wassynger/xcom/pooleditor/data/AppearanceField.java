@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public enum AppearanceField
+public enum AppearanceField implements PropertyField
 {
    HEAD("nmHead", PropertyType.NAME),
    GENDER("iGender", PropertyType.INT),
@@ -61,7 +61,7 @@ public enum AppearanceField
       FIELD_MAP = new HashMap<>();
       for (AppearanceField property : AppearanceField.values())
       {
-         FIELD_MAP.put(property.getRaw(), property);
+         FIELD_MAP.put(property.getName(), property);
       }
    }
 
@@ -70,20 +70,22 @@ public enum AppearanceField
       return Optional.ofNullable(FIELD_MAP.get(str));
    }
 
-   private final String raw;
+   private final String name;
    private final PropertyType type;
 
-   AppearanceField(String raw, PropertyType type)
+   AppearanceField(String name, PropertyType type)
    {
-      this.raw = raw;
+      this.name = name;
       this.type = type;
    }
 
-   public String getRaw()
+   @Override
+   public String getName()
    {
-      return raw;
+      return name;
    }
 
+   @Override
    public PropertyType getType()
    {
       return type;
