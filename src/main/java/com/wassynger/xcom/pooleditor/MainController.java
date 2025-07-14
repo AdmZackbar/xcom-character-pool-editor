@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javafx.concurrent.Task;
+import javafx.scene.control.TextInputDialog;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.WindowEvent;
@@ -118,9 +119,17 @@ public class MainController
 
    private void onAddPool()
    {
-      // TODO get initial name from user?
+      TextInputDialog dialog = new TextInputDialog("NewPool");
+      dialog.setTitle("Name Dialog");
+      dialog.setHeaderText("Set Pool Name");
+      dialog.showAndWait().ifPresent(this::addPool);
+   }
+
+   private void addPool(String name)
+   {
       view.getCharPools()
-            .add(EditableCharPool.create(new CharacterPool(null, "NewPool", "NewPool.bin", Collections.emptyList())));
+            .add(EditableCharPool.create(
+                  new CharacterPool(null, name, String.format("%s.bin", name), Collections.emptyList())));
    }
 
    private void onRemovePool()
