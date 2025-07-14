@@ -27,7 +27,7 @@ public class FxUtilities
       Alert alert = new Alert(Alert.AlertType.ERROR);
       alert.setTitle(title);
       alert.setHeaderText(message);
-      alert.setContentText(throwable.getLocalizedMessage());
+      alert.setContentText(throwable.toString());
       alert.show();
    }
 

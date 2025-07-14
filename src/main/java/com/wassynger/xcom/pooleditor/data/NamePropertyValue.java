@@ -29,7 +29,7 @@ class NamePropertyValue implements PropertyValue
    public void write(PropertyWriter writer) throws IOException
    {
       // raw string length + '\0' + padding + num (int length)
-      int size = str.length() + Byte.BYTES + Integer.BYTES + Integer.BYTES;
+      int size = (str != null && !str.isEmpty() ? str.length() + Byte.BYTES : 0) + Integer.BYTES + Integer.BYTES;
       writer.write(size);
       writer.writePadding();
       writer.write(str);

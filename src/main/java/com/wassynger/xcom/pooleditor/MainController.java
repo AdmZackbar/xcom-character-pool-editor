@@ -4,9 +4,11 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -65,13 +67,10 @@ public class MainController
    {
       try
       {
-         threadPool.execute(new LoadPoolTask(Config.INSTANCE.getList(Config.Setting.LOADED_MODS)
-               .stream()
-               .map(Paths::get)
-               .map(Path::toFile)
-               // Ensure file still exists
-               .filter(File::isFile)
-               .collect(Collectors.toList())));
+         threadPool.execute(new LoadPoolTask(
+               Config.INSTANCE.getList(Config.Setting.LOADED_MODS).stream().map(Paths::get).map(Path::toFile)
+                     // Ensure file still exists
+                     .filter(File::isFile).collect(Collectors.toList())));
       }
       catch (Exception e)
       {
@@ -93,8 +92,7 @@ public class MainController
                   new FileChooser.ExtensionFilter("Any", "*"));
       Config.INSTANCE.getFile(Config.Setting.LOAD_POOL_DIR)
             // Ensure directory still exists
-            .filter(File::isDirectory)
-            .ifPresent(fc::setInitialDirectory);
+            .filter(File::isDirectory).ifPresent(fc::setInitialDirectory);
       List<File> files = fc.showOpenMultipleDialog(view.getScene().getWindow());
       if (files != null && !files.isEmpty())
       {
@@ -106,21 +104,49 @@ public class MainController
    private void onSave()
    {
       EditableCharPool pool = view.getCharPoolView().getCharPool();
+      File file = Optional.ofNullable(pool.getBasePool().getPath())
+            .map(Path::toFile)
+            .filter(File::isFile)
+            .orElseGet(this::getSaveDirectory);
+      if (file != null && file.isFile())
+      {
+         Config.INSTANCE.set(Config.Setting.LOAD_POOL_DIR, file.getParentFile());
+         backupFile(file);
+         threadPool.execute(new SavePoolTask(pool, file));
+      }
+   }
+
+   private File getSaveDirectory()
+   {
+      EditableCharPool pool = view.getCharPoolView().getCharPool();
       FileChooser fc = new FileChooser();
       fc.setTitle("Save Pool to File");
-      fc.setInitialFileName(pool.getBasePool().getPath() != null ?
-            pool.getBasePool().getPath().getFileName().toString() :
-            String.format("%s.bin", pool.getBasePool().getName()));
+      fc.setInitialFileName(String.format("%s.bin", pool.getBasePool().getName()));
       fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Binary file", "*.bin"));
       Config.INSTANCE.getFile(Config.Setting.LOAD_POOL_DIR)
             // Ensure directory still exists
-            .filter(File::isDirectory)
-            .ifPresent(fc::setInitialDirectory);
-      File file = fc.showSaveDialog(view.getScene().getWindow());
-      if (file != null)
+            .filter(File::isDirectory).ifPresent(fc::setInitialDirectory);
+      return fc.showSaveDialog(view.getScene().getWindow());
+   }
+
+   private void backupFile(File file)
+   {
+      try
       {
-         Config.INSTANCE.set(Config.Setting.LOAD_POOL_DIR, file.getParentFile());
-         threadPool.execute(new SavePoolTask(pool, file));
+         File backupDir = new File("backup");
+         if (!backupDir.isDirectory() && !backupDir.mkdir())
+         {
+            System.err.println("Failed to create backup dir");
+         }
+         else
+         {
+            File backupFile = new File("backup", file.getName());
+            Files.copy(file.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+         }
+      }
+      catch (Exception e)
+      {
+         System.err.printf("Failed to backup save file: %s%n", e);
       }
    }
 
@@ -234,17 +260,21 @@ public class MainController
          // Check if we need to replace older loaded pool
          for (int i = 0; i < view.getCharPools().size(); i++)
          {
-            // Compare based on file name
-            if (view.getCharPools().get(i).getBasePool().getFileName().equals(pool.getBasePool().getFileName()))
+            // Compare based on file
+            if (Objects.equals(view.getCharPools().get(i).getBasePool().getPath(), pool.getBasePool().getPath()))
             {
                // Replace and select it
                view.getCharPools().set(i, pool);
                view.getCharPoolSelectionModel().select(i);
             }
          }
-         // Otherwise just add it and select it
+         // Otherwise just add it
          view.getCharPools().add(pool);
-         view.getCharPoolSelectionModel().select(pool);
+         // Select it if it's the only one
+         if (files.size() == 1)
+         {
+            view.getCharPoolSelectionModel().select(pool);
+         }
       }
 
       @Override
@@ -272,12 +302,20 @@ public class MainController
          updateMessage("Saving pool to file...");
          try (CharacterPoolWriter writer = CharacterPoolWriter.open(file.toPath()))
          {
-            CharacterPool updatedPool = new CharacterPool(pool.getBasePool().getPath(), pool.getBasePool().getName(),
-                  pool.getBasePool().getFileName(),
+            CharacterPool updatedPool = new CharacterPool(file.toPath(), pool.getBasePool().getName(), file.getName(),
                   pool.getCharacters().stream().map(EditableCharacter::computeEditedChar).collect(Collectors.toList()));
             writer.write(updatedPool);
          }
          return null;
+      }
+
+      @Override
+      protected void succeeded()
+      {
+         // Remove unsaved pool
+         view.getCharPools().remove(pool);
+         // Load the saved pool
+         threadPool.execute(new LoadPoolTask(Collections.singletonList(file)));
       }
 
       @Override
