@@ -59,8 +59,7 @@ class CharacterPoolReaderImpl implements CharacterPoolReader
       properties.add(property);
       assert startPos.isEmpty();
       ArrayPropertyValue charPoolArrayProperty = properties.stream()
-            .filter(p -> p.getType() == PropertyType.ARRAY)
-            .filter(p -> "CharacterPool".equals(p.getName()))
+            .filter(p -> "CharacterPool".equals(p.getField().getName()))
             .map(p -> ((ArrayPropertyValue) p.getValue()))
             .findFirst()
             .orElse(null);
@@ -101,7 +100,7 @@ class CharacterPoolReaderImpl implements CharacterPoolReader
          PropertyType type = PropertyType.get(readString());
          readPadding();
          PropertyValue value = readValue(name, type);
-         return new Property(type, name, value);
+         return new Property(PropertyField.get(name, type), value);
       }
       catch (IOException e)
       {

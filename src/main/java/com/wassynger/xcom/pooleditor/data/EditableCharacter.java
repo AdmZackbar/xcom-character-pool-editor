@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
@@ -104,13 +103,8 @@ public class EditableCharacter
 
    public Character computeEditedChar()
    {
-      Map<PropertyField, PropertyValue> map = baseChar.toEntry()
-            .getProperties()
-            .stream()
-            .collect(Collectors.toMap(p -> CharacterField.get(p.getName())
-                  .map(PropertyField.class::cast)
-                  .orElse(new Character.UnknownField(p.getName(), p.getType())),
-                  com.wassynger.xcom.pooleditor.data.Property::getValue));
+      Map<PropertyField, PropertyValue> map = com.wassynger.xcom.pooleditor.data.Property.toMap(
+            baseChar.toEntry().getProperties());
       for (CharacterField field : CharacterField.values())
       {
          if (field.getType() != PropertyType.STRUCT)
@@ -126,17 +120,12 @@ public class EditableCharacter
          {
             if (propertyMap.containsKey(field))
             {
-               properties.add(new com.wassynger.xcom.pooleditor.data.Property(field.getType(), field.getName(),
-                     computeValue(field)));
+               properties.add(new com.wassynger.xcom.pooleditor.data.Property(field, computeValue(field)));
             }
          }
          map.put(CharacterField.APPEARANCE, new StructPropertyValue(value.getStructType(), properties));
       }
-      return Character.fromProperties(map.entrySet()
-            .stream()
-            .map(e -> new com.wassynger.xcom.pooleditor.data.Property(e.getKey().getType(), e.getKey().getName(),
-                  e.getValue()))
-            .collect(Collectors.toList()));
+      return Character.fromProperties(com.wassynger.xcom.pooleditor.data.Property.toList(map));
    }
 
    private PropertyValue computeValue(PropertyField field)
@@ -149,8 +138,10 @@ public class EditableCharacter
       case INT:
          return new IntPropertyValue(((IntegerProperty) property).get());
       case STRING:
-      case NAME:
          return new StringPropertyValue(((StringProperty) property).get());
+      case NAME:
+         return new NamePropertyValue(((StringProperty) property).get(),
+               Optional.ofNullable(baseChar.get(field)).map(v -> ((NamePropertyValue) v).getNum()).orElse(0));
       default:
          throw new AssertionError(String.format("Unhandled type: %s", field.getType()));
       }

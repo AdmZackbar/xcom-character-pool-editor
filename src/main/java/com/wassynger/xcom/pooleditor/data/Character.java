@@ -1,9 +1,7 @@
 package com.wassynger.xcom.pooleditor.data;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -11,21 +9,14 @@ public class Character
 {
    static Character fromProperties(List<Property> properties)
    {
-      Map<PropertyField, PropertyValue> map = new LinkedHashMap<>();
-      for (Property property : properties)
+      Map<PropertyField, PropertyValue> map = Property.toMap(properties);
+      if (map.containsKey(CharacterField.APPEARANCE))
       {
-         PropertyField field = CharacterField.get(property.getName())
-               .map(PropertyField.class::cast)
-               .orElse(new UnknownField(property.getName(), property.getType()));
-         map.put(field, property.getValue());
-         if (CharacterField.APPEARANCE.getName().equals(property.getName()))
+         // Special case, iterate and add children of appearance
+         StructPropertyValue appearance = (StructPropertyValue) map.get(CharacterField.APPEARANCE);
+         for (Property aProp : appearance.getEntries())
          {
-            // Special case, iterate and add children of appearance
-            StructPropertyValue appearance = (StructPropertyValue) property.getValue();
-            for (Property aProp : appearance.getEntries())
-            {
-               AppearanceField.get(aProp.getName()).ifPresent(f -> map.put(f, aProp.getValue()));
-            }
+            map.put(aProp.getField(), aProp.getValue());
          }
       }
       return new Character(map);
@@ -52,8 +43,9 @@ public class Character
    {
       return new ArrayPropertyValue.Entry(map.entrySet()
             .stream()
+            // Remove appearance field entries (since they will be in the struct)
             .filter(e -> !(e.getKey() instanceof AppearanceField))
-            .map(e -> new Property(e.getKey().getType(), e.getKey().getName(), e.getValue()))
+            .map(e -> new Property(e.getKey(), e.getValue()))
             .collect(Collectors.toList()));
    }
 
@@ -61,52 +53,5 @@ public class Character
    public String toString()
    {
       return "Character{" + "map=" + map + '}';
-   }
-
-   static final class UnknownField implements PropertyField
-   {
-      private final String name;
-      private final PropertyType type;
-
-      public UnknownField(String name, PropertyType type)
-      {
-         this.name = name;
-         this.type = type;
-      }
-
-      @Override
-      public String getName()
-      {
-         return name;
-      }
-
-      @Override
-      public PropertyType getType()
-      {
-         return type;
-      }
-
-      @Override
-      public String toString()
-      {
-         return "UnknownField{" + "name='" + name + '\'' + ", type=" + type + '}';
-      }
-
-      @Override
-      public boolean equals(Object o)
-      {
-         if (!(o instanceof UnknownField))
-         {
-            return false;
-         }
-         UnknownField that = (UnknownField) o;
-         return Objects.equals(name, that.name) && type == that.type;
-      }
-
-      @Override
-      public int hashCode()
-      {
-         return Objects.hash(name, type);
-      }
    }
 }

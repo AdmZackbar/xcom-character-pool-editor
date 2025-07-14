@@ -39,8 +39,9 @@ final class CharacterPoolWriterImpl implements CharacterPoolWriter, PropertyWrit
    public void write(CharacterPool pool) throws IOException
    {
       writeHeader();
-      write(new Property(PropertyType.ARRAY, "CharacterPool", new ArrayPropertyValue(Collections.singletonList(
-            new Property(PropertyType.STRING, "PoolFileName", new StringPropertyValue(pool.getFileName()))),
+      write(new Property(PropertyField.get("CharacterPool", PropertyType.ARRAY), new ArrayPropertyValue(
+            Collections.singletonList(new Property(PropertyField.get("PoolFileName", PropertyType.STRING),
+                  new StringPropertyValue(pool.getFileName()))),
             pool.getCharacters().stream().map(Character::toEntry).collect(Collectors.toList()))));
    }
 
@@ -55,12 +56,11 @@ final class CharacterPoolWriterImpl implements CharacterPoolWriter, PropertyWrit
       if (property == null)
       {
          writeNone();
-         writePadding();
          return;
       }
-      write(property.getName());
+      write(property.getField().getName());
       writePadding();
-      write(property.getType().getName());
+      write(property.getField().getType().getName());
       writePadding();
       property.getValue().write(this);
    }
@@ -107,6 +107,7 @@ final class CharacterPoolWriterImpl implements CharacterPoolWriter, PropertyWrit
    public void writeNone() throws IOException
    {
       write("None");
+      writePadding();
    }
 
    @Override

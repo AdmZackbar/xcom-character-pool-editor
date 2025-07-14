@@ -56,7 +56,7 @@ public interface PropertyWriter extends AutoCloseable
    void writePadding() throws IOException;
 
    /**
-    * Writes 'None' as a string.
+    * Writes 'None' as a string. Also writes padding after.
     *
     * @throws IOException if some error occurred while writing to file
     * @see #write(String)

@@ -14,6 +14,11 @@ class NamePropertyValue implements PropertyValue
       this.num = num;
    }
 
+   public int getNum()
+   {
+      return num;
+   }
+
    @Override
    public String getDisplayValue()
    {

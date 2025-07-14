@@ -18,7 +18,7 @@ class ArrayPropertyValue implements PropertyValue
 
    public Optional<Property> getHeader(String name)
    {
-      return headers.stream().filter(p -> Objects.equals(name, p.getName())).findFirst();
+      return headers.stream().filter(p -> Objects.equals(name, p.getField().getName())).findFirst();
    }
 
    public List<Entry> getEntries()
@@ -45,7 +45,7 @@ class ArrayPropertyValue implements PropertyValue
          sb.append("{");
          for (Property property : entry.properties)
          {
-            sb.append(property.getName()).append(":").append(property.getValue()).append(",");
+            sb.append(property.getField().getName()).append(":").append(property.getValue()).append(",");
          }
          // Remove trailing comma and end object
          sb.deleteCharAt(sb.length() - 1).append('}').append(',');

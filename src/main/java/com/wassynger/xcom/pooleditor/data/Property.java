@@ -1,7 +1,11 @@
 package com.wassynger.xcom.pooleditor.data;
 
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Represents data found in Unreal Engine's 'UEProperty' objects. There are
@@ -14,6 +18,17 @@ public final class Property
 {
    // size of 'None' string + 'None\0' + padding
    static final int NONE_NUM_BYTES = computeStringNumBytes("None") + Integer.BYTES;
+
+   public static Map<PropertyField, PropertyValue> toMap(List<Property> list)
+   {
+      return list.stream()
+            .collect(Collectors.toMap(Property::getField, Property::getValue, (a, b) -> a, LinkedHashMap::new));
+   }
+
+   public static List<Property> toList(Map<PropertyField, PropertyValue> map)
+   {
+      return map.entrySet().stream().map(e -> new Property(e.getKey(), e.getValue())).collect(Collectors.toList());
+   }
 
    /**
     * Helper function to compute the size of the string (when serialized) in
@@ -32,43 +47,30 @@ public final class Property
       return Integer.BYTES + (str.getBytes(StandardCharsets.UTF_8)).length + Byte.BYTES;
    }
 
-   private final PropertyType type;
-   private final String name;
+   private final PropertyField field;
    private final PropertyValue value;
 
    /**
     * Creates a new property with the given arguments.
     *
-    * @param type  the property type, non-null
-    * @param name  the name, non-null
+    * @param field the field non-null
     * @param value the value, non-null
     * @throws NullPointerException if any args are null
     */
-   public Property(PropertyType type, String name, PropertyValue value)
+   public Property(PropertyField field, PropertyValue value)
    {
-      this.type = Objects.requireNonNull(type);
-      this.name = Objects.requireNonNull(name);
+      this.field = Objects.requireNonNull(field);
       this.value = Objects.requireNonNull(value);
    }
 
    /**
-    * Returns the type.
+    * Returns the field.
     *
-    * @return the type
+    * @return the field
     */
-   public PropertyType getType()
+   public PropertyField getField()
    {
-      return type;
-   }
-
-   /**
-    * Returns the name.
-    *
-    * @return the name
-    */
-   public String getName()
-   {
-      return name;
+      return field;
    }
 
    /**
@@ -89,14 +91,14 @@ public final class Property
    public int computeLength()
    {
       // name length + name + padding + type name length + type name + padding + value
-      return computeStringNumBytes(name) + Integer.BYTES + computeStringNumBytes(type.getName()) + Integer.BYTES +
-             value.length();
+      return computeStringNumBytes(field.getName()) + Integer.BYTES + computeStringNumBytes(field.getType().getName()) +
+             Integer.BYTES + value.length();
    }
 
    @Override
    public String toString()
    {
-      return "Property{" + "type=" + type + ", name='" + name + '\'' + ", value=" + value + '}';
+      return "Property{" + "field=" + field + ", value=" + value + '}';
    }
 
    @Override
@@ -107,12 +109,12 @@ public final class Property
          return false;
       }
       Property property = (Property) o;
-      return type == property.type && Objects.equals(name, property.name) && Objects.equals(value, property.value);
+      return Objects.equals(field, property.field) && Objects.equals(value, property.value);
    }
 
    @Override
    public int hashCode()
    {
-      return Objects.hash(type, name, value);
+      return Objects.hash(field, value);
    }
 }

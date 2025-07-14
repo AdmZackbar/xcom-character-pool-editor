@@ -36,7 +36,7 @@ class StructPropertyValue implements PropertyValue
       sb.append("[");
       for (Property entry : entries)
       {
-         sb.append(entry.getName()).append(":").append(entry.getValue()).append(",");
+         sb.append(entry.getField().getName()).append(":").append(entry.getValue()).append(",");
       }
       // Remove trailing comma and end array
       sb.deleteCharAt(sb.length() - 1).append("]");
