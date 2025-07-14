@@ -69,6 +69,7 @@ public class MainController
                .stream()
                .map(Paths::get)
                .map(Path::toFile)
+               // Ensure file still exists
                .filter(File::isFile)
                .collect(Collectors.toList())));
       }
@@ -90,7 +91,10 @@ public class MainController
       fc.getExtensionFilters()
             .addAll(new FileChooser.ExtensionFilter("Binary file", "*.bin"),
                   new FileChooser.ExtensionFilter("Any", "*"));
-      Config.INSTANCE.getFile(Config.Setting.LOAD_POOL_DIR).ifPresent(fc::setInitialDirectory);
+      Config.INSTANCE.getFile(Config.Setting.LOAD_POOL_DIR)
+            // Ensure directory still exists
+            .filter(File::isDirectory)
+            .ifPresent(fc::setInitialDirectory);
       List<File> files = fc.showOpenMultipleDialog(view.getScene().getWindow());
       if (files != null && !files.isEmpty())
       {
@@ -108,7 +112,10 @@ public class MainController
             pool.getBasePool().getPath().getFileName().toString() :
             String.format("%s.bin", pool.getBasePool().getName()));
       fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Binary file", "*.bin"));
-      Config.INSTANCE.getFile(Config.Setting.LOAD_POOL_DIR).ifPresent(fc::setInitialDirectory);
+      Config.INSTANCE.getFile(Config.Setting.LOAD_POOL_DIR)
+            // Ensure directory still exists
+            .filter(File::isDirectory)
+            .ifPresent(fc::setInitialDirectory);
       File file = fc.showSaveDialog(view.getScene().getWindow());
       if (file != null)
       {
