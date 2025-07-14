@@ -1,9 +1,12 @@
 package com.wassynger.xcom.pooleditor.data;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
@@ -97,6 +100,60 @@ public class EditableCharacter
    public Character getBaseChar()
    {
       return baseChar;
+   }
+
+   public Character computeEditedChar()
+   {
+      Map<PropertyField, PropertyValue> map = baseChar.toEntry()
+            .getProperties()
+            .stream()
+            .collect(Collectors.toMap(p -> CharacterField.get(p.getName())
+                  .map(PropertyField.class::cast)
+                  .orElse(new Character.UnknownField(p.getName(), p.getType())),
+                  com.wassynger.xcom.pooleditor.data.Property::getValue));
+      for (CharacterField field : CharacterField.values())
+      {
+         if (field.getType() != PropertyType.STRUCT)
+         {
+            map.put(field, computeValue(field));
+         }
+      }
+      StructPropertyValue value = (StructPropertyValue) map.get(CharacterField.APPEARANCE);
+      if (value != null)
+      {
+         List<com.wassynger.xcom.pooleditor.data.Property> properties = new ArrayList<>();
+         for (AppearanceField field : AppearanceField.values())
+         {
+            if (propertyMap.containsKey(field))
+            {
+               properties.add(new com.wassynger.xcom.pooleditor.data.Property(field.getType(), field.getName(),
+                     computeValue(field)));
+            }
+         }
+         map.put(CharacterField.APPEARANCE, new StructPropertyValue(value.getStructType(), properties));
+      }
+      return Character.fromProperties(map.entrySet()
+            .stream()
+            .map(e -> new com.wassynger.xcom.pooleditor.data.Property(e.getKey().getType(), e.getKey().getName(),
+                  e.getValue()))
+            .collect(Collectors.toList()));
+   }
+
+   private PropertyValue computeValue(PropertyField field)
+   {
+      Property<?> property = propertyMap.get(field);
+      switch (field.getType())
+      {
+      case BOOL:
+         return new BoolPropertyValue(((BooleanProperty) property).get());
+      case INT:
+         return new IntPropertyValue(((IntegerProperty) property).get());
+      case STRING:
+      case NAME:
+         return new StringPropertyValue(((StringProperty) property).get());
+      default:
+         throw new AssertionError(String.format("Unhandled type: %s", field.getType()));
+      }
    }
 
    public BooleanProperty boolProperty(PropertyField field)

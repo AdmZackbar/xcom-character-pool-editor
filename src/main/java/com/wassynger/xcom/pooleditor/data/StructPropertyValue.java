@@ -15,6 +15,11 @@ class StructPropertyValue implements PropertyValue
       this.entries = entries != null ? entries : Collections.emptyList();
    }
 
+   public String getStructType()
+   {
+      return structType;
+   }
+
    public List<Property> getEntries()
    {
       return entries;

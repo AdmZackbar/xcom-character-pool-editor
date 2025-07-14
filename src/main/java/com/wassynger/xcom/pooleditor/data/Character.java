@@ -3,19 +3,21 @@ package com.wassynger.xcom.pooleditor.data;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Character
 {
-   private static final String APPEARANCE_STRUCT_TYPE_NAME = "TAppearance";
-
    static Character fromProperties(List<Property> properties)
    {
       Map<PropertyField, PropertyValue> map = new LinkedHashMap<>();
       for (Property property : properties)
       {
+         PropertyField field = CharacterField.get(property.getName())
+               .map(PropertyField.class::cast)
+               .orElse(new UnknownField(property.getName(), property.getType()));
+         map.put(field, property.getValue());
          if (CharacterField.APPEARANCE.getName().equals(property.getName()))
          {
             // Special case, iterate and add children of appearance
@@ -24,10 +26,6 @@ public class Character
             {
                AppearanceField.get(aProp.getName()).ifPresent(f -> map.put(f, aProp.getValue()));
             }
-         }
-         else
-         {
-            CharacterField.get(property.getName()).ifPresent(f -> map.put(f, property.getValue()));
          }
       }
       return new Character(map);
@@ -52,25 +50,63 @@ public class Character
 
    ArrayPropertyValue.Entry toEntry()
    {
-      return new ArrayPropertyValue.Entry(Stream.concat(
-                  map.entrySet().stream().map(e -> new Property(e.getKey().getType(), e.getKey().getName(),
-                        e.getValue())),
-                  Stream.of(new Property(PropertyType.STRUCT, CharacterField.APPEARANCE.getName(),
-                        new StructPropertyValue(APPEARANCE_STRUCT_TYPE_NAME, computePropertyValues()))))
-            .collect(Collectors.toList()));
-   }
-
-   private List<Property> computePropertyValues()
-   {
-      return map.entrySet()
+      return new ArrayPropertyValue.Entry(map.entrySet()
             .stream()
+            .filter(e -> !(e.getKey() instanceof AppearanceField))
             .map(e -> new Property(e.getKey().getType(), e.getKey().getName(), e.getValue()))
-            .collect(Collectors.toList());
+            .collect(Collectors.toList()));
    }
 
    @Override
    public String toString()
    {
       return "Character{" + "map=" + map + '}';
+   }
+
+   static final class UnknownField implements PropertyField
+   {
+      private final String name;
+      private final PropertyType type;
+
+      public UnknownField(String name, PropertyType type)
+      {
+         this.name = name;
+         this.type = type;
+      }
+
+      @Override
+      public String getName()
+      {
+         return name;
+      }
+
+      @Override
+      public PropertyType getType()
+      {
+         return type;
+      }
+
+      @Override
+      public String toString()
+      {
+         return "UnknownField{" + "name='" + name + '\'' + ", type=" + type + '}';
+      }
+
+      @Override
+      public boolean equals(Object o)
+      {
+         if (!(o instanceof UnknownField))
+         {
+            return false;
+         }
+         UnknownField that = (UnknownField) o;
+         return Objects.equals(name, that.name) && type == that.type;
+      }
+
+      @Override
+      public int hashCode()
+      {
+         return Objects.hash(name, type);
+      }
    }
 }

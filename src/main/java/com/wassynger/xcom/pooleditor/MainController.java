@@ -22,6 +22,7 @@ import com.wassynger.xcom.pooleditor.data.CharacterPool;
 import com.wassynger.xcom.pooleditor.data.CharacterPoolReader;
 import com.wassynger.xcom.pooleditor.data.CharacterPoolWriter;
 import com.wassynger.xcom.pooleditor.data.EditableCharPool;
+import com.wassynger.xcom.pooleditor.data.EditableCharacter;
 import com.wassynger.xcom.pooleditor.ui.FxUtilities;
 
 public class MainController
@@ -99,10 +100,13 @@ public class MainController
 
    private void onSave()
    {
-      CharacterPool pool = view.getCharPoolView().getCharPool().getBasePool();
+      EditableCharPool pool = view.getCharPoolView().getCharPool();
       FileChooser fc = new FileChooser();
       fc.setTitle("Save Pool to File");
-      fc.setInitialFileName(pool.getName());
+      fc.setInitialFileName(pool.getBasePool().getPath() != null ?
+            pool.getBasePool().getPath().getFileName().toString() :
+            String.format("%s.bin", pool.getBasePool().getName()));
+      fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Binary file", "*.bin"));
       Config.INSTANCE.getFile(Config.Setting.LOAD_POOL_DIR).ifPresent(fc::setInitialDirectory);
       File file = fc.showSaveDialog(view.getScene().getWindow());
       if (file != null)
@@ -236,10 +240,10 @@ public class MainController
 
    class SavePoolTask extends Task<Void>
    {
-      private final CharacterPool pool;
+      private final EditableCharPool pool;
       private final File file;
 
-      public SavePoolTask(CharacterPool pool, File file)
+      public SavePoolTask(EditableCharPool pool, File file)
       {
          this.pool = pool;
          this.file = file;
@@ -252,7 +256,10 @@ public class MainController
          updateMessage("Saving pool to file...");
          try (CharacterPoolWriter writer = CharacterPoolWriter.open(file.toPath()))
          {
-            writer.write(pool);
+            CharacterPool updatedPool = new CharacterPool(pool.getBasePool().getPath(), pool.getBasePool().getName(),
+                  pool.getBasePool().getFileName(),
+                  pool.getCharacters().stream().map(EditableCharacter::computeEditedChar).collect(Collectors.toList()));
+            writer.write(updatedPool);
          }
          return null;
       }
