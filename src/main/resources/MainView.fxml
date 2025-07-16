@@ -7,6 +7,7 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -17,10 +18,26 @@
   <top>
     <MenuBar BorderPane.alignment="CENTER">
       <Menu mnemonicParsing="false" text="File">
-        <MenuItem fx:id="itemLoad" mnemonicParsing="false" text="Load Pool(s)..."/>
-        <MenuItem fx:id="itemSave" mnemonicParsing="false" text="Save Pool..."/>
-        <MenuItem fx:id="itemLoadMod" mnemonicParsing="false" text="Load Mod..."/>
-        <MenuItem fx:id="itemQuit" mnemonicParsing="false" text="Quit"/>
+        <MenuItem fx:id="itemLoad" mnemonicParsing="false" text="Load Pool(s)...">
+          <accelerator>
+            <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="UP" shortcut="UP"/>
+          </accelerator>
+        </MenuItem>
+        <MenuItem fx:id="itemLoadMod" mnemonicParsing="false" text="Load Mod...">
+          <accelerator>
+            <KeyCodeCombination alt="UP" code="O" control="DOWN" meta="UP" shift="DOWN" shortcut="UP"/>
+          </accelerator>
+        </MenuItem>
+        <MenuItem fx:id="itemSave" mnemonicParsing="false" text="Save Selected Pool">
+          <accelerator>
+            <KeyCodeCombination alt="UP" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP"/>
+          </accelerator>
+        </MenuItem>
+        <MenuItem fx:id="itemQuit" mnemonicParsing="false" text="Quit">
+          <accelerator>
+            <KeyCodeCombination alt="UP" code="Q" control="DOWN" meta="UP" shift="UP" shortcut="UP"/>
+          </accelerator>
+        </MenuItem>
       </Menu>
     </MenuBar>
   </top>
