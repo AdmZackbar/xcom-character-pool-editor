@@ -249,7 +249,6 @@ public class CharPoolView extends BorderPane
 
    private void onCharPoolChanged(EditableCharPool newValue)
    {
-      listChar.getSelectionModel().clearSelection();
       if (newValue == null)
       {
          labelPoolName.setText("No Pool Opened");

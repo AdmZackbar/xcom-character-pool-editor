@@ -252,7 +252,9 @@ public class MainController
       @Override
       protected void succeeded()
       {
+         EditableCharacter selectedChar = view.getCharPoolView().getCharSelectionModel().getSelectedItem();
          getValue().stream().map(EditableCharPool::create).forEach(this::addOrReplacePool);
+         view.getCharPoolView().getCharSelectionModel().select(selectedChar);
       }
 
       private void addOrReplacePool(EditableCharPool pool)
@@ -265,11 +267,17 @@ public class MainController
             {
                // Replace and select it
                view.getCharPools().set(i, pool);
-               view.getCharPoolSelectionModel().select(i);
+               selectPoolIfSingle(pool);
+               return;
             }
          }
          // Otherwise just add it
          view.getCharPools().add(pool);
+         selectPoolIfSingle(pool);
+      }
+
+      private void selectPoolIfSingle(EditableCharPool pool)
+      {
          // Select it if it's the only one
          if (files.size() == 1)
          {
@@ -312,8 +320,6 @@ public class MainController
       @Override
       protected void succeeded()
       {
-         // Remove unsaved pool
-         view.getCharPools().remove(pool);
          // Load the saved pool
          threadPool.execute(new LoadPoolTask(Collections.singletonList(file)));
       }
