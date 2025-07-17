@@ -10,7 +10,8 @@ class NamePropertyValue implements PropertyValue
 
    public NamePropertyValue(String str, int num)
    {
-      this.str = str;
+      // Don't allow empty string for name values - use "None" instead
+      this.str = str != null && !str.isEmpty() ? str : "None";
       this.num = num;
    }
 
@@ -28,8 +29,8 @@ class NamePropertyValue implements PropertyValue
    @Override
    public void write(PropertyWriter writer) throws IOException
    {
-      // raw string length + '\0' + padding + num (int length)
-      int size = (str != null && !str.isEmpty() ? str.length() + Byte.BYTES : 0) + Integer.BYTES + Integer.BYTES;
+      // raw string length + '\0' + padding + num (int length) + num
+      int size = Property.computeStringNumBytes(str) + Integer.BYTES;
       writer.write(size);
       writer.writePadding();
       writer.write(str);

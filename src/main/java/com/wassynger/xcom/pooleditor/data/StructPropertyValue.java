@@ -64,7 +64,7 @@ class StructPropertyValue implements PropertyValue
    public int length()
    {
       int childrenSize = entries.stream().mapToInt(Property::computeLength).sum();
-      // size + padding + struct name + padding + children + 'None'
+      // size + padding + struct name + padding + children + 'None' + padding
       return Integer.BYTES + Integer.BYTES + Property.computeStringNumBytes(structType) + Integer.BYTES + childrenSize +
              Property.NONE_NUM_BYTES;
    }

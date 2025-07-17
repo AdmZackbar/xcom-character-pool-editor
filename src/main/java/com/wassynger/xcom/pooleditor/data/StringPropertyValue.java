@@ -22,7 +22,7 @@ class StringPropertyValue implements PropertyValue
    public void write(PropertyWriter writer) throws IOException
    {
       // raw string length + '\0' (if not empty) + padding
-      int size = (str != null && !str.isEmpty() ? str.length() + Byte.BYTES : 0) + Integer.BYTES;
+      int size = Property.computeStringNumBytes(str);
       writer.write(size);
       writer.writePadding();
       writer.write(str);

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
@@ -153,10 +152,10 @@ class CharacterPoolReaderImpl implements CharacterPoolReader
    {
       // string length + 4 (padding)
       int size = readInt();
-      markStartBlob();
       readPadding();
+      markStartBlob();
       String str = readString();
-      checkBlobSize(size + Integer.BYTES);
+      checkBlobSize(size);
       return new StringPropertyValue(str);
    }
 
@@ -164,11 +163,11 @@ class CharacterPoolReaderImpl implements CharacterPoolReader
    {
       // string length + 8 (padding and unknown int value)
       int size = readInt();
-      markStartBlob();
       readPadding();
+      markStartBlob();
       String str = readString();
       int num = readInt();
-      checkBlobSize(size + Integer.BYTES);
+      checkBlobSize(size);
       return new NamePropertyValue(str, num);
    }
 
@@ -287,7 +286,7 @@ class CharacterPoolReaderImpl implements CharacterPoolReader
          throw new IOException(
                String.format("pos %d: expected '\\0' to end string, got %c", pos - Byte.BYTES, data[len - 1]));
       }
-      return new String(data, 0, len - 1, StandardCharsets.UTF_8);
+      return new String(data, 0, len - 1, Property.STRING_CHARSET);
    }
 
    public void readPadding() throws IOException

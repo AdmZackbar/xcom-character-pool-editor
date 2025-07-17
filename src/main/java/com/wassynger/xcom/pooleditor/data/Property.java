@@ -1,5 +1,6 @@
 package com.wassynger.xcom.pooleditor.data;
 
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
  */
 public final class Property
 {
+   static final Charset STRING_CHARSET = StandardCharsets.US_ASCII;
    // size of 'None' string + 'None\0' + padding
    static final int NONE_NUM_BYTES = computeStringNumBytes("None") + Integer.BYTES;
 
@@ -39,12 +41,13 @@ public final class Property
     */
    static int computeStringNumBytes(String str)
    {
-      if (str == null)
+      if (str == null || str.isEmpty())
       {
-         return 0;
+         // int (length of string)
+         return Integer.BYTES;
       }
-      // size of string (int) + string length + null terminator
-      return Integer.BYTES + (str.getBytes(StandardCharsets.UTF_8)).length + Byte.BYTES;
+      // int (length of string) + string length + null terminator
+      return Integer.BYTES + str.getBytes(STRING_CHARSET).length + Byte.BYTES;
    }
 
    private final PropertyField field;

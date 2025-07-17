@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -73,10 +72,11 @@ final class CharacterPoolWriterImpl implements CharacterPoolWriter, PropertyWrit
          write(0);
          return;
       }
+      byte[] data = str.getBytes(Property.STRING_CHARSET);
       // size + 1 (for null terminator)
-      int len = str.length() + 1;
+      int len = data.length + 1;
       write(len);
-      os.write(createBuffer(len).put(str.getBytes(StandardCharsets.UTF_8)).put((byte) 0).array());
+      os.write(createBuffer(len).put(data).put((byte) 0).array());
    }
 
    @Override
